@@ -1,0 +1,6 @@
+.env
+coverage
+pkg/
+.byebug_history
+dist/
+*.gem

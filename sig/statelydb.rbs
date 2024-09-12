@@ -1,0 +1,783 @@
+module StatelyDB
+  # UUID is a helper class for working with UUIDs in StatelyDB. The ruby version of a StatelyDB is a binary string,
+  # and this class provides convenience methods for converting to the base16 representation specified in RFC 9562.
+  # Internally this class uses the byte_string attribute to store the UUID as a string with the Encoding::ASCII_8BIT
+  # encoding.
+  class UUID
+    # _@param_ `byte_string` — A binary-encoded string (eg: Encoding::ASCII_8BIT encoding)
+    def initialize: (String byte_string) -> void
+
+    # to_s returns the UUID as a base16 string (eg: "f4a8a24a-129d-411f-91d2-6d19d0eaa096")
+    def to_s: () -> String
+
+    # to_str returns the UUID as a base16 string (eg: "f4a8a24a-129d-411f-91d2-6d19d0eaa096")
+    # 
+    # Note: to_str is a type coercion method that is called by Ruby when an object is coerced to a string.
+    def to_str: () -> String
+
+    # Encodes the byte string as a url-safe base64 string with padding removed.
+    def to_base64: () -> String
+
+    # UUIDs are equal if their byte_strings are equal.
+    # 
+    # _@param_ `other`
+    def ==: (StatelyDB::UUID other) -> bool
+
+    # UUIDs are sorted lexigraphically by their base16 representation.
+    # 
+    # _@param_ `other`
+    def <=>: (StatelyDB::UUID other) -> Integer
+
+    # Returns true if the UUID is empty.
+    def empty?: () -> bool
+
+    # Parses a base16 string (eg: "f4a8a24a-129d-411f-91d2-6d19d0eaa096") into a UUID object.
+    # The string can be the following:
+    # 1. Encoded as Encoding::ASCII_8BIT (also aliased as Encoding::BINARY) and be 16 bytes long.
+    # 2. A string of the form "f4a8a24a-129d-411f-91d2-6d19d0eaa096"
+    # 
+    # _@param_ `byte_string` — A binary-encoded string (eg: Encoding::ASCII_8BIT encoding) that is 16 bytes in length, or a base16-formatted UUID string.
+    def self.parse: (String byte_string) -> StatelyDB::UUID
+
+    # Not all bytes values in StatelyDB are UUIDs. This method checks if a byte string is a valid UUID.
+    # 
+    # _@param_ `byte_string` — A binary-encoded string (eg: Encoding::ASCII_8BIT encoding)
+    def self.valid_uuid?: (String byte_string) -> bool
+
+    # Returns the value of attribute byte_string.
+    attr_accessor byte_string: untyped
+  end
+
+  # The Error class contains common StatelyDB error types.
+  class Error < StandardError
+    # _@param_ `message`
+    # 
+    # _@param_ `code`
+    # 
+    # _@param_ `stately_code`
+    # 
+    # _@param_ `cause`
+    def initialize: (
+                      String message,
+                      ?code: Integer?,
+                      ?stately_code: String?,
+                      ?cause: Exception?
+                    ) -> void
+
+    # Convert any exception into a StatelyDB::Error.
+    # 
+    # _@param_ `error`
+    def self.from: (Exception error) -> StatelyDB::Error
+
+    def code_string: () -> untyped
+
+    # Turn a gRPC status code into a human-readable string. e.g. 3 -> "InvalidArgument"
+    # 
+    # _@param_ `code`
+    def self.grpc_code_to_string: (Integer code) -> String
+
+    # The gRPC/Connect Code for this error.
+    attr_reader code: untyped
+
+    # The more fine-grained Stately error code, which is a human-readable string.
+    attr_reader stately_code: untyped
+
+    # The upstream cause of the error, if available.
+    attr_reader cause: untyped
+  end
+
+  # The Token type contains a continuation token for list and sync operations along with metadata about the ability
+  # to sync or continue listing based on the last operation performed.
+  # 
+  # Ths StatelyDB SDK vends this Token type for list and sync operations. Consumers should not need to construct this
+  # type directly.
+  class Token
+    # _@param_ `token_data`
+    # 
+    # _@param_ `can_continue`
+    # 
+    # _@param_ `can_sync`
+    def initialize: (token_data: String, can_continue: bool, can_sync: bool) -> void
+
+    # Returns true if the list operation can be continued, otherwise false.
+    def can_continue?: () -> bool
+
+    # Returns true if the sync operation can be continued, otherwise false.
+    def can_sync?: () -> bool
+
+    # Returns the value of attribute token_data.
+    attr_accessor token_data: untyped
+  end
+
+  # KeyPath is a helper class for constructing key paths.
+  class KeyPath
+    def initialize: () -> void
+
+    # Appends a new path segment.
+    # 
+    # _@param_ `namespace`
+    # 
+    # _@param_ `identifier`
+    def with: (String namespace, ?String? identifier) -> KeyPath
+
+    def to_str: () -> String
+
+    def inspect: () -> String
+
+    def to_s: () -> String
+
+    # Appends a new path segment.
+    # 
+    # _@param_ `namespace`
+    # 
+    # _@param_ `identifier`
+    # 
+    # ```ruby
+    # keypath = KeyPath.with("genres", "rock").with("artists", "the-beatles")
+    # ```
+    def self.with: (String namespace, ?String? identifier) -> KeyPath
+
+    # If the value is a binary string, encode it as a url-safe base64 string with padding removed.
+    # Note that we also prepend the value with the ~ sigil to indicate that it is a base64 string.
+    # 
+    # _@param_ `value` — The value to convert to a key id.
+    def self.to_key_id: ((String | StatelyDB::UUID | _ToS) value) -> String
+  end
+
+  # Client is a client for interacting with the Stately Cloud API.
+  class Client
+    # Initialize a new StatelyDB Client
+    # 
+    # _@param_ `store_id` — the StatelyDB to use for all operations with this client.
+    # 
+    # _@param_ `schema` — the schema module to use for mapping StatelyDB Items.
+    # 
+    # _@param_ `token_provider` — the token provider to use for authentication.
+    # 
+    # _@param_ `channel` — the gRPC channel to use for communication.
+    def initialize: (
+                      ?store_id: Integer?,
+                      ?schema: Module,
+                      ?token_provider: Common::Auth::TokenProvider,
+                      ?channel: GRPC::Core::Channel
+                    ) -> void
+
+    # Set whether to allow stale results for all operations with this client. This produces a new client
+    # with the allow_stale flag set.
+    # 
+    # _@param_ `allow_stale` — whether to allow stale results
+    # 
+    # _@return_ — a new client with the allow_stale flag set
+    # 
+    # ```ruby
+    # client.with_allow_stale(true).get("/ItemType-identifier")
+    # ```
+    def with_allow_stale: (bool allow_stale) -> StatelyDB::Client
+
+    # Fetch a single Item from a StatelyDB Store at the given key_path.
+    # 
+    # _@param_ `key_path` — the path to the item
+    # 
+    # _@return_ — the Item or nil if not found
+    # 
+    # ```ruby
+    # client.get("/ItemType-identifier")
+    # ```
+    def get: (String key_path) -> (StatelyDB::Item | NilClass)
+
+    # Fetch a batch of Items from a StatelyDB Store at the given key_paths.
+    # 
+    # _@param_ `key_paths` — the paths to the items
+    # 
+    # _@return_ — the items or nil if not found
+    # 
+    # ```ruby
+    # client.data.get_batch("/ItemType-identifier", "/ItemType-identifier2")
+    # ```
+    def get_batch: (*(String | ::Array[String]) key_paths) -> (::Array[StatelyDB::Item] | NilClass)
+
+    # Begin listing Items from a StatelyDB Store at the given prefix.
+    # 
+    # _@param_ `prefix` — the prefix to list
+    # 
+    # _@param_ `limit` — the maximum number of items to return
+    # 
+    # _@param_ `sort_property` — the property to sort by
+    # 
+    # _@param_ `sort_direction` — the direction to sort by (:ascending or :descending)
+    # 
+    # _@return_ — the list of Items and the token
+    # 
+    # ```ruby
+    # client.data.begin_list("/ItemType-identifier", limit: 10, sort_direction: :ascending)
+    # ```
+    def begin_list: (
+                      String prefix,
+                      ?limit: Integer,
+                      ?sort_property: String?,
+                      ?sort_direction: Symbol
+                    ) -> (::Array[StatelyDB::Item] | StatelyDB::Token)
+
+    # Continue listing Items from a StatelyDB Store using a token.
+    # 
+    # _@param_ `token` — the token to continue from
+    # 
+    # _@return_ — the list of Items and the token
+    # 
+    # ```ruby
+    # (items, token) = client.data.begin_list("/ItemType-identifier")
+    # client.data.continue_list(token)
+    # ```
+    def continue_list: (StatelyDB::Token token) -> (::Array[StatelyDB::Item] | StatelyDB::Token)
+
+    # Sync a list of Items from a StatelyDB Store.
+    # 
+    # _@param_ `token` — the token to sync from
+    # 
+    # _@return_ — the result of the sync operation
+    # 
+    # ```ruby
+    # (items, token) = client.data.begin_list("/ItemType-identifier")
+    # client.data.sync_list(token)
+    # ```
+    def sync_list: (StatelyDB::Token token) -> StatelyDB::SyncResult
+
+    # Put an Item into a StatelyDB Store at the given key_path.
+    # 
+    # _@param_ `item` — a StatelyDB Item
+    # 
+    # _@return_ — the item that was stored
+    # 
+    # ```ruby
+    # client.data.put(my_item)
+    # ```
+    def put: (StatelyDB::Item item) -> StatelyDB::Item
+
+    # Put a batch of Items into a StatelyDB Store.
+    # 
+    # _@param_ `items` — the items to store
+    # 
+    # _@return_ — the items that were stored
+    # 
+    # ```ruby
+    # client.data.put_batch(item1, item2)
+    # ```
+    def put_batch: (*(StatelyDB::Item | ::Array[StatelyDB::Item]) items) -> ::Array[StatelyDB::Item]
+
+    # Delete one or more Items from a StatelyDB Store at the given key_paths.
+    # 
+    # _@param_ `key_paths` — the paths to the items
+    # 
+    # _@return_ — nil
+    # 
+    # ```ruby
+    # client.data.delete("/ItemType-identifier", "/ItemType-identifier2")
+    # ```
+    def delete: (*(String | ::Array[String]) key_paths) -> void
+
+    # Transaction takes a block and executes the block within a transaction.
+    # If the block raises an exception, the transaction is rolled back.
+    # If the block completes successfully, the transaction is committed.
+    # 
+    # _@return_ — the result of the transaction
+    # 
+    # ```ruby
+    # client.data.transaction do |txn|
+    #   txn.put(item: my_item)
+    #   txn.put(item: another_item)
+    # end
+    # ```
+    def transaction: () -> StatelyDB::Transaction::Transaction::Result
+
+    # Process a list response from begin_list or continue_list
+    # 
+    # _@param_ `resp` — the response to process
+    # 
+    # _@return_ — the list of Items and the token
+    def process_list_response: (Stately::Db::ListResponse resp) -> [::Array[StatelyDB::Item], StatelyDB::Token]
+
+    # Process a sync response from sync_list
+    # 
+    # _@param_ `resp` — the response to process
+    # 
+    # _@return_ — the result of the sync operation
+    def process_sync_response: (Stately::Db::SyncResponse resp) -> StatelyDB::SyncResult
+  end
+
+  # SyncResult represents the results of a sync operation.
+  # 
+  # @attr_reader changed_items [Array<StatelyDB::Item>] the items that were changed
+  # @attr_reader deleted_item_paths [Array<String>] the key paths that were deleted
+  # @attr_reader is_reset [Boolean] whether the sync operation reset the token
+  # @attr_reader token [StatelyDB::Token] the token to continue from
+  class SyncResult
+    # _@param_ `changed_items` — the items that were changed
+    # 
+    # _@param_ `deleted_item_paths` — the key paths that were deleted
+    # 
+    # _@param_ `is_reset` — whether the sync operation reset the token
+    # 
+    # _@param_ `token` — the token to continue from
+    def initialize: (
+                      changed_items: ::Array[StatelyDB::Item],
+                      deleted_item_paths: ::Array[String],
+                      is_reset: bool,
+                      token: StatelyDB::Token
+                    ) -> void
+
+    # the items that were changed
+    attr_reader changed_items: ::Array[StatelyDB::Item]
+
+    # the key paths that were deleted
+    attr_reader deleted_item_paths: ::Array[String]
+
+    # whether the sync operation reset the token
+    attr_reader is_reset: bool
+
+    # the token to continue from
+    attr_reader token: StatelyDB::Token
+  end
+
+  # StatelyDB::Item is a base class for all StatelyDB Items. This class is provided in documentation
+  # to show the expected interface for a StatelyDB Item, but in practice the SDK will return a subclass
+  # of this class that is generated from the schema.
+  class Item
+  end
+
+  module Common
+    # A module for Stately Cloud networking code
+    module Net
+      # Create a new gRPC channel
+      # 
+      # _@param_ `endpoint` — The endpoint to connect to
+      # 
+      # _@return_ — The new channel
+      def self.new_channel: (?endpoint: String) -> GRPC::Core::Channel
+    end
+
+    # A module for Stately Cloud auth code
+    module Auth
+      # GRPC interceptor to authenticate against Stately and append bearer tokens to outgoing requests
+      class Interceptor < GRPC::ClientInterceptor
+        # _@param_ `token_provider` — The token provider to use for authentication
+        def initialize: (?token_provider: TokenProvider) -> void
+
+        # gRPC client unary interceptor
+        # 
+        # _@param_ `request` — The request object
+        # 
+        # _@param_ `call` — The active call object
+        # 
+        # _@param_ `method` — The method being called
+        # 
+        # _@param_ `metadata` — The metadata hash
+        # 
+        # _@return_ — The response object
+        def request_response: (
+                                request: Object,
+                                call: GRPC::ActiveCall,
+                                method: Symbol,
+                                metadata: ::Hash[untyped, untyped]
+                              ) -> Object
+
+        # gRPC client streaming interceptor
+        # 
+        # _@param_ `requests` — The list of requests
+        # 
+        # _@param_ `call` — The active call object
+        # 
+        # _@param_ `method` — The method being called
+        # 
+        # _@param_ `metadata` — The metadata hash
+        # 
+        # _@return_ — The response enumerator
+        def client_streamer: (
+                               requests: ::Enumerable[untyped],
+                               call: GRPC::ActiveCall,
+                               method: Symbol,
+                               metadata: ::Hash[untyped, untyped]
+                             ) -> ::Enumerator[untyped]
+
+        # gRPC  server streaming interceptor
+        # 
+        # _@param_ `request` — The request object
+        # 
+        # _@param_ `call` — The active call object
+        # 
+        # _@param_ `method` — The method being called
+        # 
+        # _@param_ `metadata` — The metadata hash
+        # 
+        # _@return_ — The response enumerator
+        def server_streamer: (
+                               request: Object,
+                               call: GRPC::ActiveCall,
+                               method: Symbol,
+                               metadata: ::Hash[untyped, untyped]
+                             ) -> ::Enumerator[untyped]
+
+        # gRPC bidirectional streaming interceptor
+        # 
+        # _@param_ `requests` — The list of requests
+        # 
+        # _@param_ `call` — The active call object
+        # 
+        # _@param_ `method` — The method being called
+        # 
+        # _@param_ `metadata` — The metadata hash
+        # 
+        # _@return_ — The response enumerator
+        def bidi_streamer: (
+                             requests: ::Enumerable[untyped],
+                             call: GRPC::ActiveCall,
+                             method: Symbol,
+                             metadata: ::Hash[untyped, untyped]
+                           ) -> ::Enumerator[untyped]
+
+        # Adds a JWT to the metadata hash
+        # 
+        # _@param_ `metadata` — The metadata hash
+        def add_jwt_to_grpc_request: (metadata: ::Hash[untyped, untyped]) -> void
+      end
+
+      # TokenProvider is an abstract base class that should be extended
+      # for individual token provider implementations
+      class TokenProvider
+        # Get the current access token
+        # 
+        # _@return_ — The current access token
+        def access_token: () -> String
+      end
+
+      # Auth0TokenProvider is an implementation of the TokenProvider abstract base class
+      # which vends tokens from auth0 with the given client_id and client_secret.
+      # It will default to using the values of `STATELY_CLIENT_ID` and `STATELY_CLIENT_SECRET` if
+      # no credentials are explicitly passed and will throw an error if none are found.
+      class Auth0TokenProvider < StatelyDB::Common::Auth::TokenProvider
+        # _@param_ `auth_url` — The URL of the OAuth server
+        # 
+        # _@param_ `audience` — The OAuth Audience for the token
+        # 
+        # _@param_ `client_secret` — The StatelyDB client secret credential
+        # 
+        # _@param_ `client_id` — The StatelyDB client ID credential
+        def initialize: (
+                          ?auth_url: String,
+                          ?audience: String,
+                          ?client_secret: String,
+                          ?client_id: String
+                        ) -> void
+
+        # finalizer kills the thread running the timer if one exists
+        # 
+        # _@return_ — The finalizer proc
+        def finalize: () -> Proc
+
+        # Get the current access token
+        # 
+        # _@return_ — The current access token
+        def access_token: () -> String
+
+        # Refresh the access token
+        def refresh_token: () -> void
+
+        # Refresh the access token implementation
+        # 
+        # _@return_ — The new access token
+        def refresh_token_impl: () -> String
+      end
+    end
+
+    # GRPC interceptor to convert errors to StatelyDB::Error
+    class ErrorInterceptor < GRPC::ClientInterceptor
+      # client unary interceptor
+      def request_response: (
+                              request: untyped,
+                              call: untyped,
+                              method: untyped,
+                              metadata: untyped
+                            ) -> untyped
+
+      # client streaming interceptor
+      def client_streamer: (
+                             requests: untyped,
+                             call: untyped,
+                             method: untyped,
+                             metadata: untyped
+                           ) -> untyped
+
+      # server streaming interceptor
+      def server_streamer: (
+                             request: untyped,
+                             call: untyped,
+                             method: untyped,
+                             metadata: untyped
+                           ) -> untyped
+
+      # bidirectional streaming interceptor
+      def bidi_streamer: (
+                           requests: untyped,
+                           call: untyped,
+                           method: untyped,
+                           metadata: untyped
+                         ) -> untyped
+    end
+  end
+
+  module Transaction
+    # TransactionQueue is a wrapper around Thread::Queue that implements Enumerable
+    class Queue < Thread::Queue
+      def initialize: () -> void
+
+      # next_message_id returns the next message ID, which is the current size of the queue + 1.
+      # This value is consumed by the StatelyDB transaction as a monotonically increasing MessageID.
+      def next_message_id: () -> Integer
+
+      # Iterates over each element in the queue, yielding each element to the given block.
+      def each: () -> void
+
+      # Iterates over each item in the queue, yielding each item to the given block.
+      def each_item: () -> void
+
+      # _@return_ — The ID of the last message, or nil if there is no message.
+      attr_reader last_message_id: Integer?
+    end
+
+    # Transaction coordinates sending requests and waiting for responses. Consumers should not need
+    # to interact with this class directly, but instead use the methods provided by the StatelyDB::Client.
+    # 
+    # The example below demonstrates using a transaction, which accepts a block. The lines in the block
+    # are executed within the context of the transaction. The transaction is committed when the block
+    # completes successfully, OR is aborted if an exception is raised.
+    # 
+    # @example
+    #   result = client.transaction do |tx|
+    #     key_path = StatelyDB::KeyPath.with('movie', 'The Shining')
+    #     movie = tx.get(key_path:)
+    #     tx.put(item: movie)
+    #   end
+    class Transaction
+      # Initialize a new Transaction
+      # 
+      # _@param_ `stub` — a StatelyDB gRPC stub
+      # 
+      # _@param_ `store_id` — the StatelyDB Store to transact against
+      # 
+      # _@param_ `schema` — the schema to use for marshalling and unmarshalling Items
+      def initialize: (stub: Stately::Db::DatabaseService::Stub, store_id: Integer, schema: StatelyDB::Schema) -> void
+
+      # Send a request and wait for a response
+      # 
+      # _@param_ `req` — the request to send
+      # 
+      # _@return_ — the response
+      def request_response: (Stately::Db::TransactionRequest req) -> Stately::Db::TransactionResponse
+
+      # Send a request and don't wait for a response
+      # 
+      # _@param_ `req` — the request to send
+      # 
+      # _@return_ — nil
+      def request_only: (Stately::Db::TransactionRequest req) -> void
+
+      # Send a request and process all responses, until we receive a finished message. This is used for list operations.
+      # Each response is processed by the block passed to this method, and the response for this method is a token.
+      # 
+      # _@param_ `req` — the request to send
+      # 
+      # _@return_ — the token
+      # 
+      # ```ruby
+      # request_list_responses(req) do |resp|
+      #   resp.result.items.each do |result|
+      #     puts result.item.key_path
+      #   end
+      # ```
+      def request_list_responses: (Stately::Db::TransactionRequest req) ?{ (Stately::Db::TransactionListResponse resp) -> void } -> Stately::Db::ListToken
+
+      # Begin a transaction. Begin is called implicitly when the block passed to transaction is called.
+      # 
+      # _@return_ — nil
+      def begin: () -> void
+
+      # Commit a transaction. Commit is called implicitly when the block passed to transaction completes.
+      def commit: () -> StatelyDB::Transaction::Transaction::Result
+
+      # Abort a transaction. Abort is called implicitly if an exception is raised within the block passed to transaction.
+      def abort: () -> Stately::Db::TransactionResponse
+
+      # Check if a transaction is open. A transaction is open if begin has been called and commit or abort has not been called.
+      # 
+      # _@return_ — true if a transaction is open
+      def open?: () -> bool
+
+      # Fetch Items from a StatelyDB Store at the given key_path. Note that Items need to exist before being retrieved inside a
+      # transaction.
+      # 
+      # _@param_ `key_path` — the path to the item
+      # 
+      # _@return_ — the item or nil if not found
+      # 
+      # ```ruby
+      # client.data.transaction do |txn|
+      #   item = txn.get("/ItemType-identifier")
+      # end
+      # ```
+      def get: (String key_path) -> (StatelyDB::Item | NilClass)
+
+      # Fetch a batch of Items from a StatelyDB Store at the given key_paths. Note that Items need to exist before being retrieved
+      # inside a transaction.
+      # 
+      # Example:
+      #   client.data.transaction do |txn|
+      #     items = txn.get_batch("/foo", "/bar")
+      #   end
+      # 
+      # _@param_ `key_paths` — the paths to the items
+      # 
+      # _@return_ — the items
+      def get_batch: (*(String | ::Array[String]) key_paths) -> ::Array[StatelyDB::Item]
+
+      # Put a single Item into a StatelyDB store. Results are not returned until the transaction is
+      # committed and will be available in the Result object returned by commit. An identifier for
+      # the item will be returned while inside the transaction block.
+      # 
+      #  results.puts.each do |result|
+      #    puts result.key_path
+      #  end
+      # 
+      # _@param_ `item` — the item to store
+      # 
+      # _@return_ — the id of the item
+      # 
+      # ```ruby
+      # results = client.data.transaction do |txn|
+      #   txn.put(my_item)
+      # end
+      # ```
+      def put: (StatelyDB::Item item) -> (String | Integer)
+
+      # Put a batch of Items into a StatelyDB Store. Results are not returned until the transaction is
+      # committed and will be available in the Result object returned by commit. A list of identifiers
+      # for the items will be returned while inside the transaction block.
+      # 
+      #  results.puts.each do |result|
+      #    puts result.key_path
+      #  end
+      # 
+      # _@param_ `items` — the items to store
+      # 
+      # _@return_ — the ids of the items
+      # 
+      # ```ruby
+      # results = client.data.transaction do |txn|
+      #   txn.put_batch(item1, item2)
+      # end
+      # ```
+      def put_batch: (*(StatelyDB::Item | ::Array[StatelyDB::Item]) items) -> ::Array[(StatelyDB::UUID | String | Integer | nil)]
+
+      # Delete one or more Items from a StatelyDB Store at the given key_paths. Results are not returned until the transaction is
+      # committed and will be available in the Result object returned by commit.
+      # 
+      # Example:
+      #   client.data.transaction do |txn|
+      #     txn.delete("/ItemType-identifier", "/ItemType-identifier2")
+      #   end
+      # 
+      # _@param_ `key_paths` — the paths to the items
+      # 
+      # _@return_ — nil
+      def delete: (*(String | ::Array[String]) key_paths) -> void
+
+      # Begin listing Items from a StatelyDB Store at the given prefix.
+      # 
+      # Example:
+      #   client.data.transaction do |txn|
+      #     (items, token) = txn.begin_list("/ItemType-identifier")
+      #     (items, token) = txn.continue_list(token)
+      #   end
+      # 
+      # _@param_ `prefix` — the prefix to list
+      # 
+      # _@param_ `limit` — the maximum number of items to return
+      # 
+      # _@param_ `sort_property` — the property to sort by
+      # 
+      # _@param_ `sort_direction` — the direction to sort by (:ascending or :descending)
+      # 
+      # _@return_ — the list of Items and the token
+      def begin_list: (
+                        String prefix,
+                        ?limit: Integer,
+                        ?sort_property: String?,
+                        ?sort_direction: Symbol
+                      ) -> [::Array[StatelyDB::Item], Stately::Db::ListToken]
+
+      # Continue listing Items from a StatelyDB Store using a token.
+      # 
+      # Example:
+      #   client.data.transaction do |txn|
+      #     (items, token) = txn.begin_list("/foo")
+      #     (items, token) = txn.continue_list(token)
+      #   end
+      # 
+      # _@param_ `token` — the token to continue from
+      # 
+      # _@param_ `continue_direction` — the direction to continue by (:forward or :backward)
+      # 
+      # _@return_ — the list of Items and the token
+      def continue_list: (Stately::Db::ListToken token, ?continue_direction: Symbol) -> [::Array[StatelyDB::Item], Stately::Db::ListToken]
+
+      # Processes a list response from begin_list or continue_list
+      # 
+      # _@param_ `req` — the request to send
+      # 
+      # _@return_ — the list of Items and the token
+      def do_list_request_response: (Stately::Db::TransactionRequest req) -> [::Array[StatelyDB::Item], Stately::Db::ListToken]
+
+      # We are using a oneof inside the TransactionRequest to determine the type of request. The ruby
+      # generated code does not have a helper for the internal request type so we need to infer it.
+      # 
+      # _@param_ `req` — the request
+      # 
+      # _@return_ — the response type
+      def infer_response_type_from_request: (Stately::Db::TransactionRequest req) -> Class
+
+      # We are using a oneof inside the TransactionResponse to determine the type of response. The ruby
+      # generated code does not have a helper for the internal response type so we need to infer it.
+      # 
+      # _@param_ `resp` — the response
+      # 
+      # _@return_ — the response type
+      def infer_response_type_from_response: (Stately::Db::TransactionResponse resp) -> Class
+
+      # Result represents the results of a transaction
+      # 
+      # @attr_reader puts [Array<StatelyDB::Item>] the items that were put
+      # @attr_reader deletes [Array<String>] the key paths that were deleted
+      class Result
+        # Initialize a new Result
+        # 
+        # _@param_ `puts` — the items that were put
+        # 
+        # _@param_ `deletes` — the key paths that were deleted
+        def initialize: (puts: ::Array[StatelyDB::Item], deletes: ::Array[String]) -> void
+
+        # puts is an array of StatelyDB::Items that were put
+        attr_reader puts: ::Array[StatelyDB::Item]
+
+        # deletes is an array of key paths that were deleted
+        attr_reader deletes: ::Array[String]
+      end
+    end
+  end
+end
+
+module StatelyCode
+  STORE_REQUEST_LIMIT_EXCEEDED: untyped
+  STORE_THROUGHPUT_EXCEEDED: untyped
+  CONDITIONAL_CHECK_FAILED: untyped
+  NON_RECOVERABLE_TRANSACTION: untyped
+  CONCURRENT_MODIFICATION: untyped
+  STORE_IN_USE: untyped
+end
