@@ -20,13 +20,20 @@ module StatelyDB
                   creds.compose(call_creds)
                 end
         GRPC::Core::Channel.new(endpoint_uri.authority, {
+                                  # This map contains grpc channel settings.
+                                  # Find the full list of supported keys
+                                  # here: https://grpc.github.io/grpc/core/group__grpc__arg__keys.html
+
                                   # 2x the default of 8kb = 16kb
                                   # Set max and absolute max to the same value
                                   # to stop the grpc lib changing the error code to ResourceExhausted
                                   # while still successfully reading the metadata because only the soft
                                   # limit was exceeded.
                                   "grpc.max_metadata_size" => 8192 * 2,
-                                  "grpc.absolute_max_metadata_size" => 8192 * 2
+                                  "grpc.absolute_max_metadata_size" => 8192 * 2,
+                                  # allow unlimited receive message length while we debug a flaky test
+                                  # https://app.clickup.com/t/8689hem75
+                                  "grpc.max_receive_message_length" => -1
                                 }, creds)
       end
     end

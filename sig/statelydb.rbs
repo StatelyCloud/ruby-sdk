@@ -138,7 +138,6 @@ module StatelyDB
     def self.with: (String namespace, ?String? identifier) -> KeyPath
 
     # If the value is a binary string, encode it as a url-safe base64 string with padding removed.
-    # Note that we also prepend the value with the ~ sigil to indicate that it is a base64 string.
     # 
     # _@param_ `value` — The value to convert to a key id.
     def self.to_key_id: ((String | StatelyDB::UUID | _ToS) value) -> String

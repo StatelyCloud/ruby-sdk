@@ -48,16 +48,14 @@ module StatelyDB
     end
 
     # If the value is a binary string, encode it as a url-safe base64 string with padding removed.
-    # Note that we also prepend the value with the ~ sigil to indicate that it is a base64 string.
     #
     # @param [String, StatelyDB::UUID, #to_s] value The value to convert to a key id.
     # @return [String]
     def self.to_key_id(value)
       if value.is_a?(StatelyDB::UUID)
-        "~#{value.to_base64}"
+        value.to_base64
       elsif value.is_a?(String) && value.encoding == Encoding::BINARY
-        b64_value = [value].pack("m0").tr("=", "").tr("+/", "-_")
-        "~#{b64_value}"
+        [value].pack("m0").tr("=", "").tr("+/", "-_")
       else
         # Any other value is just converted to a string
         value.to_s

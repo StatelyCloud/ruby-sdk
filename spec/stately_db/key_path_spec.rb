@@ -18,7 +18,7 @@ describe StatelyDB::KeyPath do
 
     stately_uuid = StatelyDB::UUID.parse(test_uuid)
     path = described_class.with("foo", stately_uuid)
-    expect(path.to_s).to eq("/foo-~9KiiShKdQR-R0m0Z0Oqglg")
+    expect(path.to_s).to eq("/foo-9KiiShKdQR-R0m0Z0Oqglg")
   end
 
   it "supports multi-level paths" do
@@ -38,7 +38,7 @@ describe StatelyDB::KeyPath do
 
   it "can make a key_id from a UUID" do
     stately_uuid = StatelyDB::UUID.parse("00000000-0000-0000-0000-000000000005")
-    expect(described_class.to_key_id(stately_uuid)).to eq("~AAAAAAAAAAAAAAAAAAAABQ")
+    expect(described_class.to_key_id(stately_uuid)).to eq("AAAAAAAAAAAAAAAAAAAABQ")
   end
 
   it "can make a key_id from a String" do
@@ -47,7 +47,7 @@ describe StatelyDB::KeyPath do
 
   it "can make a key_id from a binary-encoded String" do
     binary_string = String.new([0x00, 0x01, 0x02, 0x03].pack("C*"), encoding: "ASCII-8BIT")
-    expect(described_class.to_key_id(binary_string)).to eq("~AAECAw")
+    expect(described_class.to_key_id(binary_string)).to eq("AAECAw")
   end
 
   it "can make a key_id from an Integer" do
