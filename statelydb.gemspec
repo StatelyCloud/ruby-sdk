@@ -2,14 +2,14 @@
 
 Gem::Specification.new do |s|
   s.name = "statelydb"
-  s.version = "0.2.0"
+  s.version = "0.2.1"
   s.required_ruby_version = ">= 3.3.0"
   s.licenses    = ["Apache-2.0"]
   s.summary     = "A library for interacting with StatelyDB"
   s.description = ""
   s.authors     = ["Stately Cloud, Inc."]
   s.email       = "ruby@stately.cloud"
-  s.files       = ["lib/statelydb.rb"]
+  s.files       = ["lib/statelydb.rb", "README.md"]
   s.files << Dir.glob("lib/**/*")
   s.files.flatten!
   s.homepage = "https://stately.cloud/sdk"

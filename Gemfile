@@ -2,7 +2,6 @@
 
 source "https://rubygems.org"
 
-gem "dotenv", "3.1.2"
 gem "grpc", "~> 1.63"
 gem "grpc-tools", "1.65.2"
 gem "rake", "13.2.1"

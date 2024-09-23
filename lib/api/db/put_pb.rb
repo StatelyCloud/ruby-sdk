@@ -7,7 +7,7 @@ require 'google/protobuf'
 require 'db/item_pb'
 
 
-descriptor_data = "\n\x0c\x64\x62/put.proto\x12\nstately.db\x1a\rdb/item.proto\"P\n\nPutRequest\x12\x19\n\x08store_id\x18\x01 \x01(\x04R\x07storeId\x12\'\n\x04puts\x18\x02 \x03(\x0b\x32\x13.stately.db.PutItemR\x04puts\"/\n\x07PutItem\x12$\n\x04item\x18\x01 \x01(\x0b\x32\x10.stately.db.ItemR\x04item\"5\n\x0bPutResponse\x12&\n\x05items\x18\x01 \x03(\x0b\x32\x10.stately.db.ItemR\x05itemsBc\n\x0e\x63om.stately.dbB\x08PutProtoP\x01\xa2\x02\x03SDX\xaa\x02\nStately.Db\xca\x02\nStately\\Db\xe2\x02\x16Stately\\Db\\GPBMetadata\xea\x02\x0bStately::Dbb\x06proto3"
+descriptor_data = "\n\x0c\x64\x62/put.proto\x12\nstately.db\x1a\rdb/item.proto\"P\n\nPutRequest\x12\x19\n\x08store_id\x18\x01 \x01(\x04R\x07storeId\x12\'\n\x04puts\x18\x02 \x03(\x0b\x32\x13.stately.db.PutItemR\x04puts\"P\n\x07PutItem\x12$\n\x04item\x18\x01 \x01(\x0b\x32\x10.stately.db.ItemR\x04item\x12\x1f\n\x0bschema_hash\x18\x02 \x01(\x06R\nschemaHash\"5\n\x0bPutResponse\x12&\n\x05items\x18\x01 \x03(\x0b\x32\x10.stately.db.ItemR\x05itemsBc\n\x0e\x63om.stately.dbB\x08PutProtoP\x01\xa2\x02\x03SDX\xaa\x02\nStately.Db\xca\x02\nStately\\Db\xe2\x02\x16Stately\\Db\\GPBMetadata\xea\x02\x0bStately::Dbb\x06proto3"
 
 pool = Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
