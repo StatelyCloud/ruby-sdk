@@ -29,13 +29,19 @@ module StatelyDB
     # @param store_id [Integer] the StatelyDB to use for all operations with this client.
     # @param schema [Module] the schema module to use for mapping StatelyDB Items.
     # @param token_provider [Common::Auth::TokenProvider] the token provider to use for authentication.
-    # @param channel [GRPC::Core::Channel] the gRPC channel to use for communication.
+    # @param endpoint [String] the endpoint to connect to.
+    # @param region [String] the region to connect to.
     def initialize(store_id: nil,
                    schema: StatelyDB::Types,
                    token_provider: Common::Auth::Auth0TokenProvider.new,
-                   channel: Common::Net.new_channel)
+                   endpoint: nil,
+                   region: nil)
       raise "store_id is required" if store_id.nil?
       raise "schema is required" if schema.nil?
+
+      endpoint = self.class.make_endpoint(endpoint:, region:)
+
+      channel = Common::Net.new_channel(endpoint:)
 
       auth_interceptor = Common::Auth::Interceptor.new(token_provider:)
       error_interceptor = Common::ErrorInterceptor.new
@@ -74,9 +80,9 @@ module StatelyDB
       resp.first
     end
 
-    # Fetch a batch of Items from a StatelyDB Store at the given key_paths.
+    # Fetch a batch of up to 100 Items from a StatelyDB Store at the given key_paths.
     #
-    # @param key_paths [String, Array<String>] the paths to the items
+    # @param key_paths [String, Array<String>] the paths to the items. Max 100 key paths.
     # @return [Array<StatelyDB::Item>, NilClass] the items or nil if not found
     # @raise [StatelyDB::Error] if the parameters are invalid or if the item is not found
     #
@@ -171,9 +177,9 @@ module StatelyDB
       resp.first
     end
 
-    # Put a batch of Items into a StatelyDB Store.
+    # Put a batch of up to 50 Items into a StatelyDB Store.
     #
-    # @param items [StatelyDB::Item, Array<StatelyDB::Item>] the items to store
+    # @param items [StatelyDB::Item, Array<StatelyDB::Item>] the items to store. Max 50 items.
     # @return [Array<StatelyDB::Item>] the items that were stored
     #
     # @example
@@ -195,9 +201,9 @@ module StatelyDB
       end
     end
 
-    # Delete one or more Items from a StatelyDB Store at the given key_paths.
+    # Delete up to 50 Items from a StatelyDB Store at the given key_paths.
     #
-    # @param key_paths [String, Array<String>] the paths to the items
+    # @param key_paths [String, Array<String>] the paths to the items. Max 50 key paths.
     # @raise [StatelyDB::Error::InvalidParameters] if the parameters are invalid
     # @raise [StatelyDB::Error::NotFound] if the item is not found
     # @return [void] nil
@@ -245,6 +251,25 @@ module StatelyDB
 
       # Calling raise with no parameters re-raises the original exception
       raise
+    end
+
+    # Construct the API endpoint from the region and endpoint.
+    # If the endpoint is provided, it will be returned as-is.
+    # If the region is provided and the endpoint is not,
+    # then the region-specific endpoint will be returned.
+    # If neither the region nor the endpoint is provided,
+    # then the default endpoint will be returned.
+    #
+    # @param endpoint [String] the endpoint to connect to
+    # @param region [Region] the region to connect to
+    # @return [String] the constructed endpoint
+    def self.make_endpoint(endpoint: nil, region: nil)
+      return endpoint unless endpoint.nil?
+      return "https://api.stately.cloud" if region.nil?
+
+      region = region.sub("aws-", "") if region.start_with?("aws-")
+
+      "https://#{region}.aws.api.stately.cloud"
     end
 
     private

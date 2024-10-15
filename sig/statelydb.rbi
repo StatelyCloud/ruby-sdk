@@ -109,8 +109,8 @@ module StatelyDB
   # The Token type contains a continuation token for list and sync operations along with metadata about the ability
   # to sync or continue listing based on the last operation performed.
   # 
-  # Ths StatelyDB SDK vends this Token type for list and sync operations. Consumers should not need to construct this
-  # type directly.
+  # Ths StatelyDB SDK vends this Token type for list and sync operations.
+  # Consumers should not need to construct this type directly.
   class Token
     # _@param_ `token_data`
     # 
@@ -143,7 +143,7 @@ module StatelyDB
     # _@param_ `namespace`
     # 
     # _@param_ `identifier`
-    sig { params(namespace: String, identifier: T.nilable(String)).returns(KeyPath) }
+    sig { params(namespace: String, identifier: T.nilable(T.any(String, StatelyDB::UUID, T.untyped))).returns(KeyPath) }
     def with(namespace, identifier = nil); end
 
     sig { returns(String) }
@@ -164,7 +164,7 @@ module StatelyDB
     # ```ruby
     # keypath = KeyPath.with("genres", "rock").with("artists", "the-beatles")
     # ```
-    sig { params(namespace: String, identifier: T.nilable(String)).returns(KeyPath) }
+    sig { params(namespace: String, identifier: T.nilable(T.any(String, StatelyDB::UUID, T.untyped))).returns(KeyPath) }
     def self.with(namespace, identifier = nil); end
 
     # If the value is a binary string, encode it as a url-safe base64 string with padding removed.
@@ -184,16 +184,19 @@ module StatelyDB
     # 
     # _@param_ `token_provider` — the token provider to use for authentication.
     # 
-    # _@param_ `channel` — the gRPC channel to use for communication.
+    # _@param_ `endpoint` — the endpoint to connect to.
+    # 
+    # _@param_ `region` — the region to connect to.
     sig do
       params(
         store_id: T.nilable(Integer),
         schema: Module,
         token_provider: Common::Auth::TokenProvider,
-        channel: GRPC::Core::Channel
+        endpoint: T.nilable(String),
+        region: T.nilable(String)
       ).void
     end
-    def initialize(store_id: nil, schema: StatelyDB::Types, token_provider: Common::Auth::Auth0TokenProvider.new, channel: Common::Net.new_channel); end
+    def initialize(store_id: nil, schema: StatelyDB::Types, token_provider: Common::Auth::Auth0TokenProvider.new, endpoint: nil, region: nil); end
 
     # Set whether to allow stale results for all operations with this client. This produces a new client
     # with the allow_stale flag set.
@@ -220,9 +223,9 @@ module StatelyDB
     sig { params(key_path: String).returns(T.any(StatelyDB::Item, NilClass)) }
     def get(key_path); end
 
-    # Fetch a batch of Items from a StatelyDB Store at the given key_paths.
+    # Fetch a batch of up to 100 Items from a StatelyDB Store at the given key_paths.
     # 
-    # _@param_ `key_paths` — the paths to the items
+    # _@param_ `key_paths` — the paths to the items. Max 100 key paths.
     # 
     # _@return_ — the items or nil if not found
     # 
@@ -295,9 +298,9 @@ module StatelyDB
     sig { params(item: StatelyDB::Item).returns(StatelyDB::Item) }
     def put(item); end
 
-    # Put a batch of Items into a StatelyDB Store.
+    # Put a batch of up to 50 Items into a StatelyDB Store.
     # 
-    # _@param_ `items` — the items to store
+    # _@param_ `items` — the items to store. Max 50 items.
     # 
     # _@return_ — the items that were stored
     # 
@@ -307,9 +310,9 @@ module StatelyDB
     sig { params(items: T.any(StatelyDB::Item, T::Array[StatelyDB::Item])).returns(T::Array[StatelyDB::Item]) }
     def put_batch(*items); end
 
-    # Delete one or more Items from a StatelyDB Store at the given key_paths.
+    # Delete up to 50 Items from a StatelyDB Store at the given key_paths.
     # 
-    # _@param_ `key_paths` — the paths to the items
+    # _@param_ `key_paths` — the paths to the items. Max 50 key paths.
     # 
     # _@return_ — nil
     # 
@@ -333,6 +336,21 @@ module StatelyDB
     # ```
     sig { returns(StatelyDB::Transaction::Transaction::Result) }
     def transaction; end
+
+    # Construct the API endpoint from the region and endpoint.
+    # If the endpoint is provided, it will be returned as-is.
+    # If the region is provided and the endpoint is not,
+    # then the region-specific endpoint will be returned.
+    # If neither the region nor the endpoint is provided,
+    # then the default endpoint will be returned.
+    # 
+    # _@param_ `endpoint` — the endpoint to connect to
+    # 
+    # _@param_ `region` — the region to connect to
+    # 
+    # _@return_ — the constructed endpoint
+    sig { params(endpoint: T.nilable(String), region: T.nilable(Region)).returns(String) }
+    def self.make_endpoint(endpoint: nil, region: nil); end
 
     # Process a list response from begin_list or continue_list
     # 
@@ -407,7 +425,7 @@ module StatelyDB
       # 
       # _@return_ — The new channel
       sig { params(endpoint: String).returns(GRPC::Core::Channel) }
-      def self.new_channel(endpoint: "https://api.stately.cloud"); end
+      def self.new_channel(endpoint:); end
     end
 
     # A module for Stately Cloud auth code
@@ -728,15 +746,17 @@ module StatelyDB
       sig { params(key_path: String).returns(T.any(StatelyDB::Item, NilClass)) }
       def get(key_path); end
 
-      # Fetch a batch of Items from a StatelyDB Store at the given key_paths. Note that Items need to exist before being retrieved
-      # inside a transaction.
+      # Fetch a batch of up to 100 Items from a StatelyDB Store at the given
+      # key_paths. Note that Items need to exist before being retrieved inside a
+      # transaction.
       # 
+      # key paths.
       # Example:
       #   client.data.transaction do |txn|
       #     items = txn.get_batch("/foo", "/bar")
       #   end
       # 
-      # _@param_ `key_paths` — the paths to the items
+      # _@param_ `key_paths` — the paths to the items. Max 100
       # 
       # _@return_ — the items
       sig { params(key_paths: T.any(String, T::Array[String])).returns(T::Array[StatelyDB::Item]) }
@@ -762,7 +782,7 @@ module StatelyDB
       sig { params(item: StatelyDB::Item).returns(T.any(String, Integer)) }
       def put(item); end
 
-      # Put a batch of Items into a StatelyDB Store. Results are not returned until the transaction is
+      # Put a batch of up to 50 Items into a StatelyDB Store. Results are not returned until the transaction is
       # committed and will be available in the Result object returned by commit. A list of identifiers
       # for the items will be returned while inside the transaction block.
       # 
@@ -770,7 +790,7 @@ module StatelyDB
       #    puts result.key_path
       #  end
       # 
-      # _@param_ `items` — the items to store
+      # _@param_ `items` — the items to store. Max 50 items.
       # 
       # _@return_ — the ids of the items
       # 
@@ -782,7 +802,7 @@ module StatelyDB
       sig { params(items: T.any(StatelyDB::Item, T::Array[StatelyDB::Item])).returns(T::Array[T.any(StatelyDB::UUID, String, Integer, nil)]) }
       def put_batch(*items); end
 
-      # Delete one or more Items from a StatelyDB Store at the given key_paths. Results are not returned until the transaction is
+      # Delete up to 50 Items from a StatelyDB Store at the given key_paths. Results are not returned until the transaction is
       # committed and will be available in the Result object returned by commit.
       # 
       # Example:
@@ -790,7 +810,7 @@ module StatelyDB
       #     txn.delete("/ItemType-identifier", "/ItemType-identifier2")
       #   end
       # 
-      # _@param_ `key_paths` — the paths to the items
+      # _@param_ `key_paths` — the paths to the items. Max 50 key paths.
       # 
       # _@return_ — nil
       sig { params(key_paths: T.any(String, T::Array[String])).void }
@@ -891,10 +911,10 @@ module StatelyDB
 end
 
 module StatelyCode
-  STORE_REQUEST_LIMIT_EXCEEDED = T.let("StoreRequestLimitExceeded", T.untyped)
-  STORE_THROUGHPUT_EXCEEDED = T.let("StoreThroughputExceeded", T.untyped)
+  CONCURRENT_MODIFICATION = T.let("ConcurrentModification", T.untyped)
   CONDITIONAL_CHECK_FAILED = T.let("ConditionalCheckFailed", T.untyped)
   NON_RECOVERABLE_TRANSACTION = T.let("NonRecoverableTransaction", T.untyped)
-  CONCURRENT_MODIFICATION = T.let("ConcurrentModification", T.untyped)
   STORE_IN_USE = T.let("StoreInUse", T.untyped)
+  STORE_REQUEST_LIMIT_EXCEEDED = T.let("StoreRequestLimitExceeded", T.untyped)
+  STORE_THROUGHPUT_EXCEEDED = T.let("StoreThroughputExceeded", T.untyped)
 end

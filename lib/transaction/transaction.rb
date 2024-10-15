@@ -189,10 +189,12 @@ module StatelyDB
         resp.first
       end
 
-      # Fetch a batch of Items from a StatelyDB Store at the given key_paths. Note that Items need to exist before being retrieved
-      # inside a transaction.
+      # Fetch a batch of up to 100 Items from a StatelyDB Store at the given
+      # key_paths. Note that Items need to exist before being retrieved inside a
+      # transaction.
       #
-      # @param key_paths [String, Array<String>] the paths to the items
+      # @param key_paths [String, Array<String>] the paths to the items. Max 100
+      # key paths.
       # @return [Array<StatelyDB::Item>] the items
       # @raise [StatelyDB::Error::InvalidParameters] if the parameters are invalid
       # @raise [StatelyDB::Error::NotFound] if the item is not found
@@ -234,11 +236,11 @@ module StatelyDB
         resp.first
       end
 
-      # Put a batch of Items into a StatelyDB Store. Results are not returned until the transaction is
+      # Put a batch of up to 50 Items into a StatelyDB Store. Results are not returned until the transaction is
       # committed and will be available in the Result object returned by commit. A list of identifiers
       # for the items will be returned while inside the transaction block.
       #
-      # @param items [StatelyDB::Item, Array<StatelyDB::Item>] the items to store
+      # @param items [StatelyDB::Item, Array<StatelyDB::Item>] the items to store. Max 50 items.
       # @return [Array<StatelyDB::UUID, String, Integer, nil>] the ids of the items
       #
       # @example
@@ -274,10 +276,10 @@ module StatelyDB
         end
       end
 
-      # Delete one or more Items from a StatelyDB Store at the given key_paths. Results are not returned until the transaction is
+      # Delete up to 50 Items from a StatelyDB Store at the given key_paths. Results are not returned until the transaction is
       # committed and will be available in the Result object returned by commit.
       #
-      # @param key_paths [String, Array<String>] the paths to the items
+      # @param key_paths [String, Array<String>] the paths to the items. Max 50 key paths.
       # @return [void] nil
       #
       # Example:

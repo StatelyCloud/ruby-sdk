@@ -10,7 +10,7 @@ module StatelyDB
 
     # Appends a new path segment.
     # @param [String] namespace
-    # @param [String] identifier
+    # @param [String, StatelyDB::UUID, #to_s] identifier
     # @return [KeyPath]
     def with(namespace, identifier = nil)
       if identifier.nil?
@@ -38,7 +38,7 @@ module StatelyDB
 
     # Appends a new path segment.
     # @param [String] namespace
-    # @param [String] identifier
+    # @param [String, StatelyDB::UUID, #to_s] identifier
     # @return [KeyPath]
     #
     # @example

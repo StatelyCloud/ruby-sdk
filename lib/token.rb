@@ -4,8 +4,8 @@ module StatelyDB
   # The Token type contains a continuation token for list and sync operations along with metadata about the ability
   # to sync or continue listing based on the last operation performed.
   #
-  # Ths StatelyDB SDK vends this Token type for list and sync operations. Consumers should not need to construct this
-  # type directly.
+  # Ths StatelyDB SDK vends this Token type for list and sync operations.
+  # Consumers should not need to construct this type directly.
   class Token
     # @!visibility private
     attr_accessor :token_data
