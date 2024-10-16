@@ -92,6 +92,7 @@ module StatelyDB
       key_paths = Array(key_paths).flatten
       req = Stately::Db::GetRequest.new(
         store_id: @store_id,
+        schema_version_id: @schema::SCHEMA_VERSION_ID,
         gets:
           key_paths.map { |key_path| Stately::Db::GetItem.new(key_path: String(key_path)) },
         allow_stale: @allow_stale
@@ -125,7 +126,8 @@ module StatelyDB
         limit:,
         sort_property:,
         sort_direction:,
-        allow_stale: @allow_stale
+        allow_stale: @allow_stale,
+        schema_version_id: @schema::SCHEMA_VERSION_ID
       )
       resp = @stub.begin_list(req)
       process_list_response(resp)
@@ -188,6 +190,7 @@ module StatelyDB
       items = Array(items).flatten
       req = Stately::Db::PutRequest.new(
         store_id: @store_id,
+        schema_version_id: @schema::SCHEMA_VERSION_ID,
         puts: items.map do |item|
           Stately::Db::PutItem.new(
             item: item.send("marshal_stately")
@@ -214,6 +217,7 @@ module StatelyDB
       key_paths = Array(key_paths).flatten
       req = Stately::Db::DeleteRequest.new(
         store_id: @store_id,
+        schema_version_id: @schema::SCHEMA_VERSION_ID,
         deletes: key_paths.map { |key_path| Stately::Db::DeleteItem.new(key_path: String(key_path)) }
       )
       @stub.delete(req)
@@ -308,6 +312,7 @@ module StatelyDB
     def process_sync_response(resp)
       changed_items = []
       deleted_item_paths = []
+      updated_outside_list_window_paths = []
       token = nil
       is_reset = false
       resp.each do |r|
@@ -319,6 +324,9 @@ module StatelyDB
           r.result.deleted_items.each do |item|
             deleted_item_paths << item.key_path
           end
+          r.result.updated_item_keys_outside_list_window.each do |item|
+            updated_outside_list_window_paths << item.key_path
+          end
         when :reset
           is_reset = true
         when :finished
@@ -328,7 +336,7 @@ module StatelyDB
                                        can_sync: raw_token.can_sync)
         end
       end
-      SyncResult.new(changed_items:, deleted_item_paths:, is_reset:, token:)
+      SyncResult.new(changed_items:, deleted_item_paths:, updated_outside_list_window_paths:, is_reset:, token:)
     end
   end
 
@@ -336,18 +344,24 @@ module StatelyDB
   #
   # @attr_reader changed_items [Array<StatelyDB::Item>] the items that were changed
   # @attr_reader deleted_item_paths [Array<String>] the key paths that were deleted
+  # @attr_reader updated_outside_list_window_paths [Array<String>] the key paths of
+  #   items that were updated but Stately cannot tell if they were in the sync window.
+  #   Treat these as deleted in most cases.
   # @attr_reader is_reset [Boolean] whether the sync operation reset the token
   # @attr_reader token [StatelyDB::Token] the token to continue from
   class SyncResult
-    attr_reader :changed_items, :deleted_item_paths, :is_reset, :token
+    attr_reader :changed_items, :deleted_item_paths, :updated_outside_list_window_paths, :is_reset, :token
 
     # @param changed_items [Array<StatelyDB::Item>] the items that were changed
     # @param deleted_item_paths [Array<String>] the key paths that were deleted
+    # @param updated_outside_list_window_paths [Array<String>] key paths for items that were updated
+    #   but do not currently use the sort property that the list window is based on
     # @param is_reset [Boolean] whether the sync operation reset the token
     # @param token [StatelyDB::Token] the token to continue from
-    def initialize(changed_items:, deleted_item_paths:, is_reset:, token:)
+    def initialize(changed_items:, deleted_item_paths:, updated_outside_list_window_paths:, is_reset:, token:)
       @changed_items = changed_items
       @deleted_item_paths = deleted_item_paths
+      @updated_outside_list_window_paths = updated_outside_list_window_paths
       @is_reset = is_reset
       @token = token
     end

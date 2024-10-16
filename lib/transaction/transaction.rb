@@ -124,7 +124,10 @@ module StatelyDB
       # @!visibility private
       def begin
         @is_transaction_open = true
-        req = Stately::Db::TransactionRequest.new(begin: Stately::Db::TransactionBegin.new(store_id: @store_id.to_i))
+        req = Stately::Db::TransactionRequest.new(
+          begin: Stately::Db::TransactionBegin.new(store_id: @store_id.to_i,
+                                                   schema_version_id: @schema::SCHEMA_VERSION_ID)
+        )
         request_only(req)
         @incoming_responses = @stub.transaction(@outgoing_requests)
         nil

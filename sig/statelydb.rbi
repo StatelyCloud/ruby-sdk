@@ -373,12 +373,17 @@ module StatelyDB
   # 
   # @attr_reader changed_items [Array<StatelyDB::Item>] the items that were changed
   # @attr_reader deleted_item_paths [Array<String>] the key paths that were deleted
+  # @attr_reader updated_outside_list_window_paths [Array<String>] the key paths of
+  #   items that were updated but Stately cannot tell if they were in the sync window.
+  #   Treat these as deleted in most cases.
   # @attr_reader is_reset [Boolean] whether the sync operation reset the token
   # @attr_reader token [StatelyDB::Token] the token to continue from
   class SyncResult
     # _@param_ `changed_items` — the items that were changed
     # 
     # _@param_ `deleted_item_paths` — the key paths that were deleted
+    # 
+    # _@param_ `updated_outside_list_window_paths` — key paths for items that were updated but do not currently use the sort property that the list window is based on
     # 
     # _@param_ `is_reset` — whether the sync operation reset the token
     # 
@@ -387,11 +392,12 @@ module StatelyDB
       params(
         changed_items: T::Array[StatelyDB::Item],
         deleted_item_paths: T::Array[String],
+        updated_outside_list_window_paths: T::Array[String],
         is_reset: T::Boolean,
         token: StatelyDB::Token
       ).void
     end
-    def initialize(changed_items:, deleted_item_paths:, is_reset:, token:); end
+    def initialize(changed_items:, deleted_item_paths:, updated_outside_list_window_paths:, is_reset:, token:); end
 
     # the items that were changed
     sig { returns(T::Array[StatelyDB::Item]) }
@@ -400,6 +406,12 @@ module StatelyDB
     # the key paths that were deleted
     sig { returns(T::Array[String]) }
     attr_reader :deleted_item_paths
+
+    # the key paths of
+    # items that were updated but Stately cannot tell if they were in the sync window.
+    # Treat these as deleted in most cases.
+    sig { returns(T::Array[String]) }
+    attr_reader :updated_outside_list_window_paths
 
     # whether the sync operation reset the token
     sig { returns(T::Boolean) }
