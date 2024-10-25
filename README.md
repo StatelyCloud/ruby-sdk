@@ -47,5 +47,5 @@ def put_my_item
 
 ---
 
-[Getting Started Guide]: https://preview-docs.stately.cloud/guides/getting-started/
-[Defining Schema]: https://preview-docs.stately.cloud/guides/defining-schema/
+[Getting Started Guide]: https://docs.stately.cloud/guides/getting-started/
+[Defining Schema]: https://docs.stately.cloud/guides/schema/
