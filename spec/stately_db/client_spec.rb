@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-describe StatelyDB::Client do
+describe StatelyDB::CoreClient do
   it "constructs endpoints as expected" do
     # returns the default if nothing is set
     expect(described_class.send("make_endpoint")).to eq("https://api.stately.cloud")

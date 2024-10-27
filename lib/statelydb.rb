@@ -22,25 +22,24 @@ require "token"
 require "uuid"
 
 module StatelyDB
-  # Client is a client for interacting with the Stately Cloud API.
-  class Client
-    # Initialize a new StatelyDB Client
+  # CoreClient is a low level client for interacting with the Stately Cloud API.
+  # This client shouldn't be used directly in most cases. Instead, use the generated
+  # client for your schema.
+  class CoreClient
+    # Initialize a new StatelyDB CoreClient
     #
     # @param store_id [Integer] the StatelyDB to use for all operations with this client.
-    # @param schema [Module] the schema module to use for mapping StatelyDB Items.
+    # @param schema [Module] the generated Schema module to use for mapping StatelyDB Items.
     # @param token_provider [Common::Auth::TokenProvider] the token provider to use for authentication.
     # @param endpoint [String] the endpoint to connect to.
     # @param region [String] the region to connect to.
-    def initialize(store_id: nil,
-                   schema: StatelyDB::Types,
+    def initialize(store_id:,
+                   schema:,
                    token_provider: Common::Auth::Auth0TokenProvider.new,
                    endpoint: nil,
                    region: nil)
-      raise "store_id is required" if store_id.nil?
-      raise "schema is required" if schema.nil?
 
       endpoint = self.class.make_endpoint(endpoint:, region:)
-
       channel = Common::Net.new_channel(endpoint:)
 
       auth_interceptor = Common::Auth::Interceptor.new(token_provider:)
@@ -56,7 +55,7 @@ module StatelyDB
     # Set whether to allow stale results for all operations with this client. This produces a new client
     # with the allow_stale flag set.
     # @param allow_stale [Boolean] whether to allow stale results
-    # @return [StatelyDB::Client] a new client with the allow_stale flag set
+    # @return [self] a new client with the allow_stale flag set
     # @example
     #  client.with_allow_stale(true).get("/ItemType-identifier")
     def with_allow_stale(allow_stale)

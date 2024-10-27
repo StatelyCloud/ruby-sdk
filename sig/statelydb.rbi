@@ -174,13 +174,15 @@ module StatelyDB
     def self.to_key_id(value); end
   end
 
-  # Client is a client for interacting with the Stately Cloud API.
-  class Client
-    # Initialize a new StatelyDB Client
+  # CoreClient is a low level client for interacting with the Stately Cloud API.
+  # This client shouldn't be used directly in most cases. Instead, use the generated
+  # client for your schema.
+  class CoreClient
+    # Initialize a new StatelyDB CoreClient
     # 
     # _@param_ `store_id` — the StatelyDB to use for all operations with this client.
     # 
-    # _@param_ `schema` — the schema module to use for mapping StatelyDB Items.
+    # _@param_ `schema` — the generated Schema module to use for mapping StatelyDB Items.
     # 
     # _@param_ `token_provider` — the token provider to use for authentication.
     # 
@@ -189,14 +191,14 @@ module StatelyDB
     # _@param_ `region` — the region to connect to.
     sig do
       params(
-        store_id: T.nilable(Integer),
+        store_id: Integer,
         schema: Module,
         token_provider: Common::Auth::TokenProvider,
         endpoint: T.nilable(String),
         region: T.nilable(String)
       ).void
     end
-    def initialize(store_id: nil, schema: StatelyDB::Types, token_provider: Common::Auth::Auth0TokenProvider.new, endpoint: nil, region: nil); end
+    def initialize(store_id:, schema:, token_provider: Common::Auth::Auth0TokenProvider.new, endpoint: nil, region: nil); end
 
     # Set whether to allow stale results for all operations with this client. This produces a new client
     # with the allow_stale flag set.
@@ -208,7 +210,7 @@ module StatelyDB
     # ```ruby
     # client.with_allow_stale(true).get("/ItemType-identifier")
     # ```
-    sig { params(allow_stale: T::Boolean).returns(StatelyDB::Client) }
+    sig { params(allow_stale: T::Boolean).returns(T.self_type) }
     def with_allow_stale(allow_stale); end
 
     # Fetch a single Item from a StatelyDB Store at the given key_path.
@@ -668,7 +670,7 @@ module StatelyDB
     end
 
     # Transaction coordinates sending requests and waiting for responses. Consumers should not need
-    # to interact with this class directly, but instead use the methods provided by the StatelyDB::Client.
+    # to interact with this class directly, but instead use the methods provided by the StatelyDB::CoreClient.
     # 
     # The example below demonstrates using a transaction, which accepts a block. The lines in the block
     # are executed within the context of the transaction. The transaction is committed when the block

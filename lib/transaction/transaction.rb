@@ -3,7 +3,7 @@
 module StatelyDB
   module Transaction
     # Transaction coordinates sending requests and waiting for responses. Consumers should not need
-    # to interact with this class directly, but instead use the methods provided by the StatelyDB::Client.
+    # to interact with this class directly, but instead use the methods provided by the StatelyDB::CoreClient.
     #
     # The example below demonstrates using a transaction, which accepts a block. The lines in the block
     # are executed within the context of the transaction. The transaction is committed when the block
