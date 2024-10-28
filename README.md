@@ -29,7 +29,7 @@ gem install statelydb
 Create an authenticated client, then import your item types from your generated schema module and use the client!
 
 ```ruby
-require_relative 'schema/stately.item_types'
+require_relative 'schema/stately'
 
 def put_my_item
     # Create a client. This will use the environment variables
