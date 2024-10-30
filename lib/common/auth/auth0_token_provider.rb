@@ -100,10 +100,11 @@ module StatelyDB
             # there is no non-blocking sleep in ruby.
             # skip this if we have a pending timer thread already
             @timer = Thread.new do
-              # TODO: - add some random jitter to stop clients getting a cycle after
-              # some event like an outage
-              # Also, don't let this be less than 1sec
-              delay = [resp_data["expires_in"] - 10, 1].max
+              # Calculate a random multiplier between 0.3 and 0.8 to to apply to the expiry
+              # so that we refresh in the background ahead of expiration, but avoid
+              # multiple processes hammering the service at the same time.
+              jitter = (Random.rand * 0.5) + 0.3
+              delay = resp_data["expires_in"] * jitter
               sleep(delay)
               refresh_token
             end
