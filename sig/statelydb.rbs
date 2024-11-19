@@ -805,6 +805,7 @@ module StatelyDB
 end
 
 module StatelyCode
+  CACHED_SCHEMA_TOO_OLD: untyped
   CONCURRENT_MODIFICATION: untyped
   CONDITIONAL_CHECK_FAILED: untyped
   NON_RECOVERABLE_TRANSACTION: untyped

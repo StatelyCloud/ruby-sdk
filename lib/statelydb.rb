@@ -142,7 +142,8 @@ module StatelyDB
     #   client.data.continue_list(token)
     def continue_list(token)
       req = Stately::Db::ContinueListRequest.new(
-        token_data: token.token_data
+        token_data: token.token_data,
+        schema_version_id: @schema::SCHEMA_VERSION_ID
       )
       resp = @stub.continue_list(req)
       process_list_response(resp)
@@ -158,7 +159,8 @@ module StatelyDB
     #   client.data.sync_list(token)
     def sync_list(token)
       req = Stately::Db::SyncListRequest.new(
-        token_data: token.token_data
+        token_data: token.token_data,
+        schema_version_id: @schema::SCHEMA_VERSION_ID
       )
       resp = @stub.sync_list(req)
       process_sync_response(resp)

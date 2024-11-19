@@ -925,6 +925,7 @@ module StatelyDB
 end
 
 module StatelyCode
+  CACHED_SCHEMA_TOO_OLD = T.let("CachedSchemaTooOld", T.untyped)
   CONCURRENT_MODIFICATION = T.let("ConcurrentModification", T.untyped)
   CONDITIONAL_CHECK_FAILED = T.let("ConditionalCheckFailed", T.untyped)
   NON_RECOVERABLE_TRANSACTION = T.let("NonRecoverableTransaction", T.untyped)
