@@ -298,7 +298,8 @@ module StatelyDB
           raw_token = r.finished.token
           token = StatelyDB::Token.new(token_data: raw_token.token_data,
                                        can_continue: raw_token.can_continue,
-                                       can_sync: raw_token.can_sync)
+                                       can_sync: raw_token.can_sync,
+                                       schema_version_id: raw_token.schema_version_id)
         end
       end
       [items, token]
@@ -334,7 +335,8 @@ module StatelyDB
           raw_token = r.finished.token
           token = StatelyDB::Token.new(token_data: raw_token.token_data,
                                        can_continue: raw_token.can_continue,
-                                       can_sync: raw_token.can_sync)
+                                       can_sync: raw_token.can_sync,
+                                       schema_version_id: raw_token.schema_version_id)
         end
       end
       SyncResult.new(changed_items:, deleted_item_paths:, updated_outside_list_window_paths:, is_reset:, token:)

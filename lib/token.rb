@@ -13,10 +13,12 @@ module StatelyDB
     # @param [String] token_data
     # @param [Boolean] can_continue
     # @param [Boolean] can_sync
-    def initialize(token_data:, can_continue:, can_sync:)
+    # @param [Integer] schema_version_id
+    def initialize(token_data:, can_continue:, can_sync:, schema_version_id:)
       @token_data = token_data
       @can_continue = can_continue
       @can_sync = can_sync
+      @schema_version_id = schema_version_id
     end
 
     # Returns true if the list operation can be continued, otherwise false.
@@ -29,6 +31,11 @@ module StatelyDB
     # @return [Boolean]
     def can_sync?
       !!@can_sync
+    end
+
+    # Returns the schema version ID associated with the token.
+    def schema_version_id
+      !!@schema_version_id
     end
   end
 end

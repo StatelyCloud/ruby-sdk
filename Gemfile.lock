@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    statelydb (0.9.0)
+    statelydb (0.10.0)
       async (= 2.10.1)
       async-http (= 0.64.0)
       grpc (= 1.63.0)

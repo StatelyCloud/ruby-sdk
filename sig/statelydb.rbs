@@ -97,13 +97,23 @@ module StatelyDB
     # _@param_ `can_continue`
     # 
     # _@param_ `can_sync`
-    def initialize: (token_data: String, can_continue: bool, can_sync: bool) -> void
+    # 
+    # _@param_ `schema_version_id`
+    def initialize: (
+                      token_data: String,
+                      can_continue: bool,
+                      can_sync: bool,
+                      schema_version_id: Integer
+                    ) -> void
 
     # Returns true if the list operation can be continued, otherwise false.
     def can_continue?: () -> bool
 
     # Returns true if the sync operation can be continued, otherwise false.
     def can_sync?: () -> bool
+
+    # Returns the schema version ID associated with the token.
+    def schema_version_id: () -> untyped
 
     # Returns the value of attribute token_data.
     attr_accessor token_data: untyped

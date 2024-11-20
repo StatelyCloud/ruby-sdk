@@ -110,7 +110,8 @@ module StatelyDB
             raw_token = resp.finished.token
             token = StatelyDB::Token.new(token_data: raw_token.token_data,
                                          can_continue: raw_token.can_continue,
-                                         can_sync: raw_token.can_sync)
+                                         can_sync: raw_token.can_sync,
+                                         schema_version_id: raw_token.schema_version_id)
             break
           end
           yield resp
