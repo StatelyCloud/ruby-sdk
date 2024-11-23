@@ -38,6 +38,16 @@ module StatelyDB
                    token_provider: Common::Auth::Auth0TokenProvider.new,
                    endpoint: nil,
                    region: nil)
+      if store_id.nil?
+        raise StatelyDB::Error.new("store_id is required",
+                                   code: GRPC::Core::StatusCodes::INVALID_ARGUMENT,
+                                   stately_code: "InvalidArgument")
+      end
+      if schema.nil?
+        raise StatelyDB::Error.new("schema is required",
+                                   code: GRPC::Core::StatusCodes::INVALID_ARGUMENT,
+                                   stately_code: "InvalidArgument")
+      end
 
       endpoint = self.class.make_endpoint(endpoint:, region:)
       channel = Common::Net.new_channel(endpoint:)
@@ -169,12 +179,19 @@ module StatelyDB
     # Put an Item into a StatelyDB Store at the given key_path.
     #
     # @param item [StatelyDB::Item] a StatelyDB Item
+    # @param must_not_exist [Boolean] A condition that indicates this item must
+    #   not already exist at any of its key paths. If there is already an item
+    #   at one of those paths, the Put operation will fail with a
+    #   "ConditionalCheckFailed" error. Note that if the item has an
+    #   `initialValue` field in its key, that initial value will automatically
+    #   be chosen not to conflict with existing items, so this condition only
+    #   applies to key paths that do not contain the `initialValue` field.
     # @return [StatelyDB::Item] the item that was stored
     #
-    # @example
-    #   client.data.put(my_item)
-    def put(item)
-      resp = put_batch(item)
+    # @example client.data.put(my_item)
+    # @example client.data.put(my_item, must_not_exist: true)
+    def put(item, must_not_exist: false)
+      resp = put_batch({ item:, must_not_exist: })
 
       # Always return a single Item.
       resp.first
@@ -182,21 +199,32 @@ module StatelyDB
 
     # Put a batch of up to 50 Items into a StatelyDB Store.
     #
-    # @param items [StatelyDB::Item, Array<StatelyDB::Item>] the items to store. Max 50 items.
+    # @param items [StatelyDB::Item, Array<StatelyDB::Item>] the items to store.
+    # Max 50 items.
     # @return [Array<StatelyDB::Item>] the items that were stored
     #
     # @example
     #   client.data.put_batch(item1, item2)
+    # @example
+    #  client.data.put_batch({ item: item1, must_not_exist: true }, item2)
     def put_batch(*items)
-      items = Array(items).flatten
+      puts = Array(items).flatten.map do |input|
+        if input.is_a?(Hash)
+          item = input[:item]
+          Stately::Db::PutItem.new(
+            item: item.send("marshal_stately"),
+            must_not_exist: input[:must_not_exist]
+          )
+        else
+          Stately::Db::PutItem.new(
+            item: input.send("marshal_stately")
+          )
+        end
+      end
       req = Stately::Db::PutRequest.new(
         store_id: @store_id,
         schema_version_id: @schema::SCHEMA_VERSION_ID,
-        puts: items.map do |item|
-          Stately::Db::PutItem.new(
-            item: item.send("marshal_stately")
-          )
-        end
+        puts:
       )
       resp = @stub.put(req)
 
@@ -208,8 +236,8 @@ module StatelyDB
     # Delete up to 50 Items from a StatelyDB Store at the given key_paths.
     #
     # @param key_paths [String, Array<String>] the paths to the items. Max 50 key paths.
-    # @raise [StatelyDB::Error::InvalidParameters] if the parameters are invalid
-    # @raise [StatelyDB::Error::NotFound] if the item is not found
+    # @raise [StatelyDB::Error] if the parameters are invalid
+    # @raise [StatelyDB::Error] if the item is not found
     # @return [void] nil
     #
     # @example
@@ -230,8 +258,8 @@ module StatelyDB
     # If the block completes successfully, the transaction is committed.
     #
     # @return [StatelyDB::Transaction::Transaction::Result] the result of the transaction
-    # @raise [StatelyDB::Error::InvalidParameters] if the parameters are invalid
-    # @raise [StatelyDB::Error::NotFound] if the item is not found
+    # @raise [StatelyDB::Error] if the parameters are invalid
+    # @raise [StatelyDB::Error] if the item is not found
     # @raise [Exception] if any other exception is raised
     #
     # @example

@@ -11,10 +11,13 @@ module StatelyDB
   # The Error class contains common StatelyDB error types.
   class Error < StandardError
     # The gRPC/Connect Code for this error.
+    # @return [Integer]
     attr_reader :code
     # The more fine-grained Stately error code, which is a human-readable string.
+    # @return [String]
     attr_reader :stately_code
     # The upstream cause of the error, if available.
+    # @return [Exception]
     attr_reader :cause
 
     # @param [String] message
@@ -53,6 +56,8 @@ module StatelyDB
       new(error.message, code: GRPC::Core::StatusCodes::UNKNOWN, stately_code: "Unknown", cause: error)
     end
 
+    # Turn this error's gRPC status code into a human-readable string. e.g. 3 -> "InvalidArgument"
+    # @return [String]
     def code_string
       self.class.grpc_code_to_string(@code)
     end

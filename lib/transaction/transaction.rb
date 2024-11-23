@@ -226,6 +226,13 @@ module StatelyDB
       # the item will be returned while inside the transaction block.
       #
       # @param item [StatelyDB::Item] the item to store
+      # @param must_not_exist [Boolean] A condition that indicates this item must
+      #   not already exist at any of its key paths. If there is already an item
+      #   at one of those paths, the Put operation will fail with a
+      #   "ConditionalCheckFailed" error. Note that if the item has an
+      #   `initialValue` field in its key, that initial value will automatically
+      #   be chosen not to conflict with existing items, so this condition only
+      #   applies to key paths that do not contain the `initialValue` field.
       # @return [String, Integer] the id of the item
       #
       # @example
@@ -235,16 +242,18 @@ module StatelyDB
       #  results.puts.each do |result|
       #    puts result.key_path
       #  end
-      def put(item)
-        resp = put_batch(item)
+      def put(item, must_not_exist: false)
+        resp = put_batch({ item:, must_not_exist: })
         resp.first
       end
 
-      # Put a batch of up to 50 Items into a StatelyDB Store. Results are not returned until the transaction is
-      # committed and will be available in the Result object returned by commit. A list of identifiers
-      # for the items will be returned while inside the transaction block.
+      # Put a batch of up to 50 Items into a StatelyDB Store. Results are not
+      # returned until the transaction is committed and will be available in the
+      # Result object returned by commit. A list of identifiers for the items
+      # will be returned while inside the transaction block.
       #
-      # @param items [StatelyDB::Item, Array<StatelyDB::Item>] the items to store. Max 50 items.
+      # @param items [StatelyDB::Item, Array<StatelyDB::Item>] the items to store. Max
+      # 50 items.
       # @return [Array<StatelyDB::UUID, String, Integer, nil>] the ids of the items
       #
       # @example
@@ -255,14 +264,22 @@ module StatelyDB
       #    puts result.key_path
       #  end
       def put_batch(*items)
-        items = Array(items).flatten
+        puts = Array(items).flatten.map do |input|
+          if input.is_a?(Hash)
+            item = input[:item]
+            Stately::Db::PutItem.new(
+              item: item.send("marshal_stately"),
+              must_not_exist: input[:must_not_exist]
+            )
+          else
+            Stately::Db::PutItem.new(
+              item: input.send("marshal_stately")
+            )
+          end
+        end
         req = Stately::Db::TransactionRequest.new(
           put_items: Stately::Db::TransactionPut.new(
-            puts: items.map do |item|
-              Stately::Db::PutItem.new(
-                item: item.send("marshal_stately")
-              )
-            end
+            puts:
           )
         )
 

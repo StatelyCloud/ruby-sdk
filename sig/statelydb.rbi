@@ -84,7 +84,8 @@ module StatelyDB
     sig { params(error: Exception).returns(StatelyDB::Error) }
     def self.from(error); end
 
-    sig { returns(T.untyped) }
+    # Turn this error's gRPC status code into a human-readable string. e.g. 3 -> "InvalidArgument"
+    sig { returns(String) }
     def code_string; end
 
     # Turn a gRPC status code into a human-readable string. e.g. 3 -> "InvalidArgument"
@@ -94,15 +95,15 @@ module StatelyDB
     def self.grpc_code_to_string(code); end
 
     # The gRPC/Connect Code for this error.
-    sig { returns(T.untyped) }
+    sig { returns(Integer) }
     attr_reader :code
 
     # The more fine-grained Stately error code, which is a human-readable string.
-    sig { returns(T.untyped) }
+    sig { returns(String) }
     attr_reader :stately_code
 
     # The upstream cause of the error, if available.
-    sig { returns(T.untyped) }
+    sig { returns(Exception) }
     attr_reader :cause
   end
 
@@ -305,22 +306,34 @@ module StatelyDB
     # 
     # _@param_ `item` — a StatelyDB Item
     # 
+    # _@param_ `must_not_exist` — A condition that indicates this item must not already exist at any of its key paths. If there is already an item at one of those paths, the Put operation will fail with a "ConditionalCheckFailed" error. Note that if the item has an `initialValue` field in its key, that initial value will automatically be chosen not to conflict with existing items, so this condition only applies to key paths that do not contain the `initialValue` field.
+    # 
     # _@return_ — the item that was stored
     # 
-    # ```ruby
     # client.data.put(my_item)
+    # ```ruby
     # ```
-    sig { params(item: StatelyDB::Item).returns(StatelyDB::Item) }
-    def put(item); end
+    # 
+    # client.data.put(my_item, must_not_exist: true)
+    # ```ruby
+    # ```
+    sig { params(item: StatelyDB::Item, must_not_exist: T::Boolean).returns(StatelyDB::Item) }
+    def put(item, must_not_exist: false); end
 
     # Put a batch of up to 50 Items into a StatelyDB Store.
     # 
-    # _@param_ `items` — the items to store. Max 50 items.
+    # Max 50 items.
+    # 
+    # _@param_ `items` — the items to store.
     # 
     # _@return_ — the items that were stored
     # 
     # ```ruby
     # client.data.put_batch(item1, item2)
+    # ```
+    # 
+    # ```ruby
+    # client.data.put_batch({ item: item1, must_not_exist: true }, item2)
     # ```
     sig { params(items: T.any(StatelyDB::Item, T::Array[StatelyDB::Item])).returns(T::Array[StatelyDB::Item]) }
     def put_batch(*items); end
@@ -799,6 +812,8 @@ module StatelyDB
       # 
       # _@param_ `item` — the item to store
       # 
+      # _@param_ `must_not_exist` — A condition that indicates this item must not already exist at any of its key paths. If there is already an item at one of those paths, the Put operation will fail with a "ConditionalCheckFailed" error. Note that if the item has an `initialValue` field in its key, that initial value will automatically be chosen not to conflict with existing items, so this condition only applies to key paths that do not contain the `initialValue` field.
+      # 
       # _@return_ — the id of the item
       # 
       # ```ruby
@@ -806,18 +821,20 @@ module StatelyDB
       #   txn.put(my_item)
       # end
       # ```
-      sig { params(item: StatelyDB::Item).returns(T.any(String, Integer)) }
-      def put(item); end
+      sig { params(item: StatelyDB::Item, must_not_exist: T::Boolean).returns(T.any(String, Integer)) }
+      def put(item, must_not_exist: false); end
 
-      # Put a batch of up to 50 Items into a StatelyDB Store. Results are not returned until the transaction is
-      # committed and will be available in the Result object returned by commit. A list of identifiers
-      # for the items will be returned while inside the transaction block.
+      # Put a batch of up to 50 Items into a StatelyDB Store. Results are not
+      # returned until the transaction is committed and will be available in the
+      # Result object returned by commit. A list of identifiers for the items
+      # will be returned while inside the transaction block.
       # 
+      # 50 items.
       #  results.puts.each do |result|
       #    puts result.key_path
       #  end
       # 
-      # _@param_ `items` — the items to store. Max 50 items.
+      # _@param_ `items` — the items to store. Max
       # 
       # _@return_ — the ids of the items
       # 

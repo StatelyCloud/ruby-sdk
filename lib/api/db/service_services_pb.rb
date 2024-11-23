@@ -35,7 +35,7 @@ module Stately
         rpc :Get, ::Stately::Db::GetRequest, ::Stately::Db::GetResponse
         # Delete removes one or more Items from the Store by their key paths. This
         # will fail if the caller does not have permission to delete Items.
-        # Tombstones will be saved for deleted items for  time, so
+        # Tombstones will be saved for deleted items for some time, so
         # that SyncList can return information about deleted items. Deletes are
         # always applied atomically; all will fail or all will succeed.
         rpc :Delete, ::Stately::Db::DeleteRequest, ::Stately::Db::DeleteResponse
