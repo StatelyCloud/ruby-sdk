@@ -74,7 +74,7 @@ module StatelyDB
         # @return [void]
         # @api private
         def add_jwt_to_grpc_request(metadata:)
-          metadata["authorization"] = "Bearer #{@token_provider.access_token}"
+          metadata["authorization"] = "Bearer #{@token_provider.get_token}"
         end
       end
     end

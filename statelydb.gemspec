@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = "statelydb"
-  s.version = "0.11.0"
+  s.version = "0.12.0"
   s.required_ruby_version = ">= 3.3.0"
   s.licenses    = ["Apache-2.0"]
   s.summary     = "A library for interacting with StatelyDB"
@@ -22,7 +22,8 @@ Gem::Specification.new do |s|
   # Gemfile is only for development and test dependencies
   # If you want people who depend on your gem to have the deps installed
   # they have to go here
-  s.add_dependency "async", "2.10.1"
-  s.add_dependency "async-http", "0.64.0"
+  s.add_dependency "async", "2.21.1"
+  s.add_dependency "async-actor", "0.1.1"
+  s.add_dependency "async-http", "0.85.0"
   s.add_dependency "grpc", "1.63.0"
 end

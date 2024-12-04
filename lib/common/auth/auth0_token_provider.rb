@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "async"
+require "async/actor"
 require "async/http/internet"
 require "async/semaphore"
 require "json"
@@ -12,6 +13,7 @@ LOGGER = Logger.new($stdout)
 LOGGER.level = Logger::WARN
 DEFAULT_GRANT_TYPE = "client_credentials"
 
+# A module for Stately Cloud auth code
 module StatelyDB
   module Common
     # A module for Stately Cloud auth code
@@ -21,102 +23,183 @@ module StatelyDB
       # It will default to using the values of `STATELY_CLIENT_ID` and `STATELY_CLIENT_SECRET` if
       # no credentials are explicitly passed and will throw an error if none are found.
       class Auth0TokenProvider < TokenProvider
-        # @param [String] auth_url The URL of the OAuth server
+        # @param [Endpoint] domain The domain of the OAuth server
         # @param [String] audience The OAuth Audience for the token
         # @param [String] client_secret The StatelyDB client secret credential
         # @param [String] client_id The StatelyDB client ID credential
         def initialize(
-          auth_url: "https://oauth.stately.cloud",
+          domain: "https://oauth.stately.cloud",
           audience: "api.stately.cloud",
           client_secret: ENV.fetch("STATELY_CLIENT_SECRET"),
           client_id: ENV.fetch("STATELY_CLIENT_ID")
         )
           super()
-          @client_id = client_id
-          @client_secret = client_secret
-          @audience = audience
-          @auth_url = "#{auth_url}/oauth/token"
-          @access_token = nil
-          @pending_refresh = nil
-          @timer = nil
-
-          Async do |_task|
-            refresh_token
-          end
-
-          # need a weak ref to ourself or the GC will never run the finalizer
-          ObjectSpace.define_finalizer(WeakRef.new(self), finalize)
+          @actor = Async::Actor.new(Actor.new(domain: domain, audience: audience, client_secret: client_secret,
+                                              client_id: client_id))
+          # this initialization cannot happen in the constructor because it is async and must run on the event loop
+          # which is not available in the constructor
+          @actor.init
         end
 
-        # finalizer kills the thread running the timer if one exists
-        # @return [Proc] The finalizer proc
-        def finalize
-          proc {
-            Thread.kill(@timer) unless @timer.nil?
-          }
+        # Close the token provider and kill any background operations
+        # This just invokes the close method on the actor which should do the cleanup
+        def close
+          @actor.close
         end
 
         # Get the current access token
         # @return [String] The current access token
-        def access_token
-          # TODO: - check whether or not the GIL is enough to make this threadsafe
-          @access_token || refresh_token
+        def get_token(force: false)
+          @actor.get_token(force: force)
         end
 
-        private
+        # Actor for managing the token refresh
+        # This is designed to be used with Async::Actor and run on a dedicated thread.
+        class Actor
+          # @param [Endpoint] domain The domain of the OAuth server
+          # @param [String] audience The OAuth Audience for the token
+          # @param [String] client_secret The StatelyDB client secret credential
+          # @param [String] client_id The StatelyDB client ID credential
+          def initialize(
+            domain: "https://oauth.stately.cloud",
+            audience: "api.stately.cloud",
+            client_secret: ENV.fetch("STATELY_CLIENT_SECRET"),
+            client_id: ENV.fetch("STATELY_CLIENT_ID")
+          )
+            super()
+            @client = Async::HTTP::Client.new(Async::HTTP::Endpoint.parse(domain))
+            @client_id = client_id
+            @client_secret = client_secret
+            @audience = audience
 
-        # Refresh the access token
-        # @return [void]
-        def refresh_token
-          # never run more than one at a time.
-          @pending_refresh ||= refresh_token_impl
-          # many threads all wait on the same task here.
-          # I wrote a test to check this is possible
-          @pending_refresh.wait
-          # multiple people will all set this to nil after
-          # they are done waiting but I don't think i can put this inside
-          # refresh_token_impl. It seems harmless because of the GIL?
-          @pending_refresh = nil
-        end
+            @access_token = nil
+            @expires_at_secs = nil
+            @pending_refresh = nil
+          end
 
-        # Refresh the access token implementation
-        # @return [String] The new access token
-        def refresh_token_impl
-          Async do
-            client = Async::HTTP::Internet.new
-            headers = [["content-type", "application/json"]]
-            data = { "client_id" => @client_id, client_secret: @client_secret, audience: @audience,
-                     grant_type: DEFAULT_GRANT_TYPE }
-            body = [JSON.dump(data)]
+          # Initialize the actor. This runs on the actor thread which means
+          # we can dispatch async operations here.
+          def init
+            refresh_token
+          end
 
-            resp = client.post(@auth_url, headers, body)
-            resp_data = JSON.parse(resp.read)
-            raise "Auth request failed: #{resp_data}" if resp.status != 200
+          # Close the token provider and kill any background operations
+          def close
+            @scheduled&.stop
+            @client&.close
+          end
 
-            @access_token = resp_data["access_token"]
+          # Get the current access token
+          # @param [Boolean] force Whether to force a refresh of the token
+          # @return [String] The current access token
+          def get_token(force: false)
+            if force
+              @access_token = nil
+              @expires_at_secs = nil
+            else
+              token, ok = valid_access_token
+              return token if ok
+            end
 
-            # do this on a thread or else the sleep
-            # will block the event loop.
-            # there is no non-blocking sleep in ruby.
-            # skip this if we have a pending timer thread already
-            @timer = Thread.new do
-              # Calculate a random multiplier between 0.3 and 0.8 to to apply to the expiry
+            refresh_token.wait
+          end
+
+          # Get the current access token and whether it is valid
+          # @return [Array] The current access token and whether it is valid
+          def valid_access_token
+            return "", false if @access_token.nil?
+            return "", false if @expires_at_secs.nil?
+            return "", false if @expires_at_secs < Time.now.to_i
+
+            [@access_token, true]
+          end
+
+          # Refresh the access token
+          # @return [string] The new access token
+          def refresh_token
+            Async do
+              # we use an Async::Condition to dedupe multiple requests here
+              # if the condition exists, we wait on it to complete
+              # otherwise we create a condition, make the request, then signal the condition with the result
+              # If there is an error then we signal that instead so we can raise it for the waiters.
+              if @pending_refresh.nil?
+                begin
+                  @pending_refresh = Async::Condition.new
+                  new_access_token = refresh_token_impl.wait
+                  # now broadcast the new token to any waiters
+                  @pending_refresh.signal(new_access_token)
+                  new_access_token
+                rescue StandardError => e
+                  @pending_refresh.signal(e)
+                  raise e
+                ensure
+                  # delete the condition to restart the process
+                  @pending_refresh = nil
+                end
+              else
+                res = @pending_refresh.wait
+                # if the refresh result is an error, re-raise it.
+                # otherwise return the token
+                raise res if res.is_a?(StandardError)
+
+                res
+              end
+            end
+          end
+
+          # Refresh the access token implementation
+          # @return [String] The new access token
+          def refresh_token_impl
+            Async do
+              resp_data = make_auth0_request
+
+              new_access_token = resp_data["access_token"]
+              new_expires_in_secs = resp_data["expires_in"]
+              new_expires_at_secs = Time.now.to_i + new_expires_in_secs
+              if @expires_at_secs.nil? || new_expires_at_secs > @expires_at_secs
+
+                @access_token = new_access_token
+                @expires_at_secs = new_expires_at_secs
+              else
+
+                new_access_token = @access_token
+                new_expires_in_secs = @expires_at_secs - Time.now.to_i
+              end
+
+              # Schedule a refresh of the token ahead of the expiry time
+              # Calculate a random multiplier between 0.9 and 0.95 to to apply to the expiry
               # so that we refresh in the background ahead of expiration, but avoid
               # multiple processes hammering the service at the same time.
-              jitter = (Random.rand * 0.5) + 0.3
-              delay = resp_data["expires_in"] * jitter
-              sleep(delay)
-              refresh_token
+              jitter = (Random.rand * 0.05) + 0.9
+              delay_secs = new_expires_in_secs * jitter
+
+              # do this on the fiber scheduler (the root scheduler) to avoid infinite recursion
+              @scheduled ||= Fiber.scheduler.async do
+                # Kernel.sleep is non-blocking if Ruby 3.1+ and Async 2+
+                # https://github.com/socketry/async/issues/305#issuecomment-1945188193
+                sleep(delay_secs)
+                refresh_token
+                @scheduled = nil
+              end
+
+              new_access_token
             end
-            @pending_refresh = nil
-            resp_data["access_token"]
-          rescue StandardError => e
-            # set the token to nil so that it will
-            # be refreshed on the next get
-            @access_token = nil
-            LOGGER.warn(e)
-          ensure
-            client.close
+          end
+
+          def make_auth0_request
+            headers = [["content-type", "application/json"]]
+            body = JSON.dump({ "client_id" => @client_id, client_secret: @client_secret, audience: @audience,
+                               grant_type: DEFAULT_GRANT_TYPE })
+            Sync do
+              # TODO: Wrap this in a retry loop and parse errors like we
+              # do in the Go SDK.
+              response = @client.post("/oauth/token", headers, body)
+              raise "Auth request failed" if response.status != 200
+
+              JSON.parse(response.read)
+            ensure
+              response&.close
+            end
           end
         end
       end

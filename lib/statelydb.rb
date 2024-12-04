@@ -50,16 +50,22 @@ module StatelyDB
       end
 
       endpoint = self.class.make_endpoint(endpoint:, region:)
-      channel = Common::Net.new_channel(endpoint:)
+      @channel = Common::Net.new_channel(endpoint:)
+      @token_provider = token_provider
 
       auth_interceptor = Common::Auth::Interceptor.new(token_provider:)
       error_interceptor = Common::ErrorInterceptor.new
 
-      @stub = Stately::Db::DatabaseService::Stub.new(nil, nil, channel_override: channel,
+      @stub = Stately::Db::DatabaseService::Stub.new(nil, nil, channel_override: @channel,
                                                                interceptors: [error_interceptor, auth_interceptor])
       @store_id = store_id.to_i
       @schema = schema
       @allow_stale = false
+    end
+
+    def close
+      @channel&.close
+      @token_provider&.close
     end
 
     # Set whether to allow stale results for all operations with this client. This produces a new client

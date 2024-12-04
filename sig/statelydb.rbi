@@ -1,4 +1,5 @@
 # typed: strong
+# A module for Stately Cloud auth code
 module StatelyDB
   # UUID is a helper class for working with UUIDs in StatelyDB. The ruby version of a StatelyDB is a binary string,
   # and this class provides convenience methods for converting to the base16 representation specified in RFC 9562.
@@ -213,6 +214,9 @@ module StatelyDB
       ).void
     end
     def initialize(store_id:, schema:, token_provider: Common::Auth::Auth0TokenProvider.new, endpoint: nil, region: nil); end
+
+    sig { returns(T.untyped) }
+    def close; end
 
     # Set whether to allow stale results for all operations with this client. This produces a new client
     # with the allow_stale flag set.
@@ -572,9 +576,15 @@ module StatelyDB
       class TokenProvider
         # Get the current access token
         # 
+        # _@param_ `force` — Whether to force a refresh of the token
+        # 
         # _@return_ — The current access token
-        sig { returns(String) }
-        def access_token; end
+        sig { params(force: T::Boolean).returns(String) }
+        def get_token(force: false); end
+
+        # Close the token provider and kill any background operations
+        sig { returns(T.untyped) }
+        def close; end
       end
 
       # Auth0TokenProvider is an implementation of the TokenProvider abstract base class
@@ -582,7 +592,7 @@ module StatelyDB
       # It will default to using the values of `STATELY_CLIENT_ID` and `STATELY_CLIENT_SECRET` if
       # no credentials are explicitly passed and will throw an error if none are found.
       class Auth0TokenProvider < StatelyDB::Common::Auth::TokenProvider
-        # _@param_ `auth_url` — The URL of the OAuth server
+        # _@param_ `domain` — The domain of the OAuth server
         # 
         # _@param_ `audience` — The OAuth Audience for the token
         # 
@@ -591,35 +601,83 @@ module StatelyDB
         # _@param_ `client_id` — The StatelyDB client ID credential
         sig do
           params(
-            auth_url: String,
+            domain: Endpoint,
             audience: String,
             client_secret: String,
             client_id: String
           ).void
         end
-        def initialize(auth_url: "https://oauth.stately.cloud", audience: "api.stately.cloud", client_secret: ENV.fetch("STATELY_CLIENT_SECRET"), client_id: ENV.fetch("STATELY_CLIENT_ID")); end
+        def initialize(domain: "https://oauth.stately.cloud", audience: "api.stately.cloud", client_secret: ENV.fetch("STATELY_CLIENT_SECRET"), client_id: ENV.fetch("STATELY_CLIENT_ID")); end
 
-        # finalizer kills the thread running the timer if one exists
-        # 
-        # _@return_ — The finalizer proc
-        sig { returns(Proc) }
-        def finalize; end
+        # Close the token provider and kill any background operations
+        # This just invokes the close method on the actor which should do the cleanup
+        sig { returns(T.untyped) }
+        def close; end
 
         # Get the current access token
         # 
         # _@return_ — The current access token
-        sig { returns(String) }
-        def access_token; end
+        sig { params(force: T::Boolean).returns(String) }
+        def get_token(force: false); end
 
-        # Refresh the access token
-        sig { void }
-        def refresh_token; end
+        # Actor for managing the token refresh
+        # This is designed to be used with Async::Actor and run on a dedicated thread.
+        class Actor
+          # _@param_ `domain` — The domain of the OAuth server
+          # 
+          # _@param_ `audience` — The OAuth Audience for the token
+          # 
+          # _@param_ `client_secret` — The StatelyDB client secret credential
+          # 
+          # _@param_ `client_id` — The StatelyDB client ID credential
+          sig do
+            params(
+              domain: Endpoint,
+              audience: String,
+              client_secret: String,
+              client_id: String
+            ).void
+          end
+          def initialize(domain: "https://oauth.stately.cloud", audience: "api.stately.cloud", client_secret: ENV.fetch("STATELY_CLIENT_SECRET"), client_id: ENV.fetch("STATELY_CLIENT_ID")); end
 
-        # Refresh the access token implementation
-        # 
-        # _@return_ — The new access token
-        sig { returns(String) }
-        def refresh_token_impl; end
+          # Initialize the actor. This runs on the actor thread which means
+          # we can dispatch async operations here.
+          sig { returns(T.untyped) }
+          def init; end
+
+          # Close the token provider and kill any background operations
+          sig { returns(T.untyped) }
+          def close; end
+
+          # Get the current access token
+          # 
+          # _@param_ `force` — Whether to force a refresh of the token
+          # 
+          # _@return_ — The current access token
+          sig { params(force: T::Boolean).returns(String) }
+          def get_token(force: false); end
+
+          # Get the current access token and whether it is valid
+          # 
+          # _@return_ — The current access token and whether it is valid
+          sig { returns(T::Array[T.untyped]) }
+          def valid_access_token; end
+
+          # Refresh the access token
+          # 
+          # _@return_ — The new access token
+          sig { returns(string) }
+          def refresh_token; end
+
+          # Refresh the access token implementation
+          # 
+          # _@return_ — The new access token
+          sig { returns(String) }
+          def refresh_token_impl; end
+
+          sig { returns(T.untyped) }
+          def make_auth0_request; end
+        end
       end
     end
 

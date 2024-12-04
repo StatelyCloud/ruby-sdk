@@ -8,8 +8,14 @@ module StatelyDB
       # for individual token provider implementations
       class TokenProvider
         # Get the current access token
+        # @param [Boolean] force Whether to force a refresh of the token
         # @return [String] The current access token
-        def access_token
+        def get_token(force: false) # rubocop:disable Lint/UnusedMethodArgument
+          raise "Not Implemented"
+        end
+
+        # Close the token provider and kill any background operations
+        def close
           raise "Not Implemented"
         end
       end

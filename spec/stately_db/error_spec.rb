@@ -4,6 +4,7 @@ require "error"
 require "grpc"
 require "google/protobuf/any_pb"
 require "google/rpc/status_pb"
+require "statelydb"
 
 describe StatelyDB::Error do
   it "can be constructed directly" do

@@ -1,3 +1,4 @@
+# A module for Stately Cloud auth code
 module StatelyDB
   # UUID is a helper class for working with UUIDs in StatelyDB. The ruby version of a StatelyDB is a binary string,
   # and this class provides convenience methods for converting to the base16 representation specified in RFC 9562.
@@ -176,6 +177,8 @@ module StatelyDB
                       ?endpoint: String?,
                       ?region: String?
                     ) -> void
+
+    def close: () -> untyped
 
     # Set whether to allow stale results for all operations with this client. This produces a new client
     # with the allow_stale flag set.
@@ -497,8 +500,13 @@ module StatelyDB
       class TokenProvider
         # Get the current access token
         # 
+        # _@param_ `force` — Whether to force a refresh of the token
+        # 
         # _@return_ — The current access token
-        def access_token: () -> String
+        def get_token: (?force: bool) -> String
+
+        # Close the token provider and kill any background operations
+        def close: () -> untyped
       end
 
       # Auth0TokenProvider is an implementation of the TokenProvider abstract base class
@@ -506,7 +514,7 @@ module StatelyDB
       # It will default to using the values of `STATELY_CLIENT_ID` and `STATELY_CLIENT_SECRET` if
       # no credentials are explicitly passed and will throw an error if none are found.
       class Auth0TokenProvider < StatelyDB::Common::Auth::TokenProvider
-        # _@param_ `auth_url` — The URL of the OAuth server
+        # _@param_ `domain` — The domain of the OAuth server
         # 
         # _@param_ `audience` — The OAuth Audience for the token
         # 
@@ -514,29 +522,69 @@ module StatelyDB
         # 
         # _@param_ `client_id` — The StatelyDB client ID credential
         def initialize: (
-                          ?auth_url: String,
+                          ?domain: Endpoint,
                           ?audience: String,
                           ?client_secret: String,
                           ?client_id: String
                         ) -> void
 
-        # finalizer kills the thread running the timer if one exists
-        # 
-        # _@return_ — The finalizer proc
-        def finalize: () -> Proc
+        # Close the token provider and kill any background operations
+        # This just invokes the close method on the actor which should do the cleanup
+        def close: () -> untyped
 
         # Get the current access token
         # 
         # _@return_ — The current access token
-        def access_token: () -> String
+        def get_token: (?force: bool) -> String
 
-        # Refresh the access token
-        def refresh_token: () -> void
+        # Actor for managing the token refresh
+        # This is designed to be used with Async::Actor and run on a dedicated thread.
+        class Actor
+          # _@param_ `domain` — The domain of the OAuth server
+          # 
+          # _@param_ `audience` — The OAuth Audience for the token
+          # 
+          # _@param_ `client_secret` — The StatelyDB client secret credential
+          # 
+          # _@param_ `client_id` — The StatelyDB client ID credential
+          def initialize: (
+                            ?domain: Endpoint,
+                            ?audience: String,
+                            ?client_secret: String,
+                            ?client_id: String
+                          ) -> void
 
-        # Refresh the access token implementation
-        # 
-        # _@return_ — The new access token
-        def refresh_token_impl: () -> String
+          # Initialize the actor. This runs on the actor thread which means
+          # we can dispatch async operations here.
+          def init: () -> untyped
+
+          # Close the token provider and kill any background operations
+          def close: () -> untyped
+
+          # Get the current access token
+          # 
+          # _@param_ `force` — Whether to force a refresh of the token
+          # 
+          # _@return_ — The current access token
+          def get_token: (?force: bool) -> String
+
+          # Get the current access token and whether it is valid
+          # 
+          # _@return_ — The current access token and whether it is valid
+          def valid_access_token: () -> ::Array[untyped]
+
+          # Refresh the access token
+          # 
+          # _@return_ — The new access token
+          def refresh_token: () -> string
+
+          # Refresh the access token implementation
+          # 
+          # _@return_ — The new access token
+          def refresh_token_impl: () -> String
+
+          def make_auth0_request: () -> untyped
+        end
       end
     end
 

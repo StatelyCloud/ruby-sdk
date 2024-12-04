@@ -89,3 +89,12 @@ RSpec/ExampleLength:
 
 RSpec/SpecFilePathFormat:
   Enabled: false
+
+RSpec/InstanceVariable:
+  Enabled: false
+
+#
+# Naming
+#
+Naming/AccessorMethodName:
+  Enabled: false

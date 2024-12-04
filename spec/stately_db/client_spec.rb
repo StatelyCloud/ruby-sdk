@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "statelydb"
+
 describe StatelyDB::CoreClient do
   it "constructs endpoints as expected" do
     # returns the default if nothing is set
