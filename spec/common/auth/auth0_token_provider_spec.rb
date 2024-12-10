@@ -17,7 +17,7 @@ RSpec.describe "Auth0TokenProvider" do
     call_count = 0
     stub_request(:any,
                  "https://oauth.stately.cloud/oauth/token").to_return_json(body: lambda {
-                                                                                   sleep(1) # simulate a slow request
+                                                                                   sleep(2) # simulate a slow request
                                                                                    call_count += 1
                                                                                    { access_token: "fresh-token-#{call_count}",
                                                                                      expires_in: 1 }
@@ -25,11 +25,11 @@ RSpec.describe "Auth0TokenProvider" do
 
     # first run a benchmark on the ctor to check that the initial refresh doesn't block
     provider = nil
-    construction_time = Benchmark.realtime do
+    construction_time_secs = Benchmark.realtime do
       provider = StatelyDB::Common::Auth::Auth0TokenProvider.new(client_id: "test-id",
                                                                  client_secret: "test-secret")
     end
-    expect(construction_time).to be < 2
+    expect(construction_time_secs).to be < 1
     expect(provider).not_to be_nil
 
     # now check that the token has been fetched once

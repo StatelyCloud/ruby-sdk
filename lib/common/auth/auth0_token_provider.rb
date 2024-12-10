@@ -23,19 +23,19 @@ module StatelyDB
       # It will default to using the values of `STATELY_CLIENT_ID` and `STATELY_CLIENT_SECRET` if
       # no credentials are explicitly passed and will throw an error if none are found.
       class Auth0TokenProvider < TokenProvider
-        # @param [Endpoint] domain The domain of the OAuth server
+        # @param [String] origin The origin of the OAuth server
         # @param [String] audience The OAuth Audience for the token
         # @param [String] client_secret The StatelyDB client secret credential
         # @param [String] client_id The StatelyDB client ID credential
         def initialize(
-          domain: "https://oauth.stately.cloud",
+          origin: "https://oauth.stately.cloud",
           audience: "api.stately.cloud",
           client_secret: ENV.fetch("STATELY_CLIENT_SECRET"),
           client_id: ENV.fetch("STATELY_CLIENT_ID")
         )
           super()
-          @actor = Async::Actor.new(Actor.new(domain: domain, audience: audience, client_secret: client_secret,
-                                              client_id: client_id))
+          @actor = Async::Actor.new(Actor.new(origin: origin, audience: audience,
+                                              client_secret: client_secret, client_id: client_id))
           # this initialization cannot happen in the constructor because it is async and must run on the event loop
           # which is not available in the constructor
           @actor.init
@@ -56,24 +56,24 @@ module StatelyDB
         # Actor for managing the token refresh
         # This is designed to be used with Async::Actor and run on a dedicated thread.
         class Actor
-          # @param [Endpoint] domain The domain of the OAuth server
+          # @param [String] origin The origin of the OAuth server
           # @param [String] audience The OAuth Audience for the token
           # @param [String] client_secret The StatelyDB client secret credential
           # @param [String] client_id The StatelyDB client ID credential
           def initialize(
-            domain: "https://oauth.stately.cloud",
-            audience: "api.stately.cloud",
-            client_secret: ENV.fetch("STATELY_CLIENT_SECRET"),
-            client_id: ENV.fetch("STATELY_CLIENT_ID")
+            origin:,
+            audience:,
+            client_secret:,
+            client_id:
           )
             super()
-            @client = Async::HTTP::Client.new(Async::HTTP::Endpoint.parse(domain))
+            @client = Async::HTTP::Client.new(Async::HTTP::Endpoint.parse(origin))
             @client_id = client_id
             @client_secret = client_secret
             @audience = audience
 
             @access_token = nil
-            @expires_at_secs = nil
+            @expires_at_unix_secs = nil
             @pending_refresh = nil
           end
 
@@ -95,7 +95,7 @@ module StatelyDB
           def get_token(force: false)
             if force
               @access_token = nil
-              @expires_at_secs = nil
+              @expires_at_unix_secs = nil
             else
               token, ok = valid_access_token
               return token if ok
@@ -108,8 +108,8 @@ module StatelyDB
           # @return [Array] The current access token and whether it is valid
           def valid_access_token
             return "", false if @access_token.nil?
-            return "", false if @expires_at_secs.nil?
-            return "", false if @expires_at_secs < Time.now.to_i
+            return "", false if @expires_at_unix_secs.nil?
+            return "", false if @expires_at_unix_secs < Time.now.to_i
 
             [@access_token, true]
           end
@@ -155,15 +155,15 @@ module StatelyDB
 
               new_access_token = resp_data["access_token"]
               new_expires_in_secs = resp_data["expires_in"]
-              new_expires_at_secs = Time.now.to_i + new_expires_in_secs
-              if @expires_at_secs.nil? || new_expires_at_secs > @expires_at_secs
+              new_expires_at_unix_secs = Time.now.to_i + new_expires_in_secs
+              if @expires_at_unix_secs.nil? || new_expires_at_unix_secs > @expires_at_unix_secs
 
                 @access_token = new_access_token
-                @expires_at_secs = new_expires_at_secs
+                @expires_at_unix_secs = new_expires_at_unix_secs
               else
 
                 new_access_token = @access_token
-                new_expires_in_secs = @expires_at_secs - Time.now.to_i
+                new_expires_in_secs = @expires_at_unix_secs - Time.now.to_i
               end
 
               # Schedule a refresh of the token ahead of the expiry time

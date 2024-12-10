@@ -3,7 +3,7 @@
 source "https://rubygems.org"
 
 gem "grpc", "~> 1.63"
-gem "grpc-tools", "1.67.0"
+gem "grpc-tools", "1.68.1"
 gem "rake", "13.2.1"
 
 gem "statelydb", path: "."

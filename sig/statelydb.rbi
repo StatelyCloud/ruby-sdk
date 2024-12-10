@@ -592,7 +592,7 @@ module StatelyDB
       # It will default to using the values of `STATELY_CLIENT_ID` and `STATELY_CLIENT_SECRET` if
       # no credentials are explicitly passed and will throw an error if none are found.
       class Auth0TokenProvider < StatelyDB::Common::Auth::TokenProvider
-        # _@param_ `domain` — The domain of the OAuth server
+        # _@param_ `origin` — The origin of the OAuth server
         # 
         # _@param_ `audience` — The OAuth Audience for the token
         # 
@@ -601,13 +601,13 @@ module StatelyDB
         # _@param_ `client_id` — The StatelyDB client ID credential
         sig do
           params(
-            domain: Endpoint,
+            origin: String,
             audience: String,
             client_secret: String,
             client_id: String
           ).void
         end
-        def initialize(domain: "https://oauth.stately.cloud", audience: "api.stately.cloud", client_secret: ENV.fetch("STATELY_CLIENT_SECRET"), client_id: ENV.fetch("STATELY_CLIENT_ID")); end
+        def initialize(origin: "https://oauth.stately.cloud", audience: "api.stately.cloud", client_secret: ENV.fetch("STATELY_CLIENT_SECRET"), client_id: ENV.fetch("STATELY_CLIENT_ID")); end
 
         # Close the token provider and kill any background operations
         # This just invokes the close method on the actor which should do the cleanup
@@ -623,7 +623,7 @@ module StatelyDB
         # Actor for managing the token refresh
         # This is designed to be used with Async::Actor and run on a dedicated thread.
         class Actor
-          # _@param_ `domain` — The domain of the OAuth server
+          # _@param_ `origin` — The origin of the OAuth server
           # 
           # _@param_ `audience` — The OAuth Audience for the token
           # 
@@ -632,13 +632,13 @@ module StatelyDB
           # _@param_ `client_id` — The StatelyDB client ID credential
           sig do
             params(
-              domain: Endpoint,
+              origin: String,
               audience: String,
               client_secret: String,
               client_id: String
             ).void
           end
-          def initialize(domain: "https://oauth.stately.cloud", audience: "api.stately.cloud", client_secret: ENV.fetch("STATELY_CLIENT_SECRET"), client_id: ENV.fetch("STATELY_CLIENT_ID")); end
+          def initialize(origin:, audience:, client_secret:, client_id:); end
 
           # Initialize the actor. This runs on the actor thread which means
           # we can dispatch async operations here.
