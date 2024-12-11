@@ -575,8 +575,8 @@ module StatelyDB
 
           # Refresh the access token
           # 
-          # _@return_ — The new access token
-          def refresh_token: () -> string
+          # _@return_ — A task that will resolve to the new access token
+          def refresh_token: () -> Task
 
           # Refresh the access token implementation
           # 

@@ -115,7 +115,7 @@ module StatelyDB
           end
 
           # Refresh the access token
-          # @return [string] The new access token
+          # @return [Task] A task that will resolve to the new access token
           def refresh_token
             Async do
               # we use an Async::Condition to dedupe multiple requests here
@@ -125,7 +125,7 @@ module StatelyDB
               if @pending_refresh.nil?
                 begin
                   @pending_refresh = Async::Condition.new
-                  new_access_token = refresh_token_impl.wait
+                  new_access_token = refresh_token_impl
                   # now broadcast the new token to any waiters
                   @pending_refresh.signal(new_access_token)
                   new_access_token
@@ -150,7 +150,7 @@ module StatelyDB
           # Refresh the access token implementation
           # @return [String] The new access token
           def refresh_token_impl
-            Async do
+            Sync do
               resp_data = make_auth0_request
 
               new_access_token = resp_data["access_token"]
