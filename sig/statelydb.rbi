@@ -213,7 +213,7 @@ module StatelyDB
         region: T.nilable(String)
       ).void
     end
-    def initialize(store_id:, schema:, token_provider: Common::Auth::Auth0TokenProvider.new, endpoint: nil, region: nil); end
+    def initialize(store_id:, schema:, token_provider: Common::Auth::AuthTokenProvider.new, endpoint: nil, region: nil); end
 
     # _@return_ — nil
     sig { void }
@@ -479,7 +479,7 @@ module StatelyDB
       class Interceptor < GRPC::ClientInterceptor
         # _@param_ `token_provider` — The token provider to use for authentication
         sig { params(token_provider: TokenProvider).void }
-        def initialize(token_provider: Auth0TokenProvider.new); end
+        def initialize(token_provider: AuthTokenProvider.new); end
 
         # gRPC client unary interceptor
         # 
@@ -572,6 +572,86 @@ module StatelyDB
         def add_jwt_to_grpc_request(metadata:); end
       end
 
+      # Result from a token fetch operation
+      class TokenResult
+        # Create a new TokenResult
+        # 
+        # _@param_ `token` — The access token
+        # 
+        # _@param_ `expires_in_secs` — The number of seconds until the token expires
+        sig { params(token: String, expires_in_secs: Integer).void }
+        def initialize(token:, expires_in_secs:); end
+
+        # Returns the value of attribute token.
+        sig { returns(T.untyped) }
+        attr_reader :token
+
+        # Returns the value of attribute expires_in_secs.
+        sig { returns(T.untyped) }
+        attr_reader :expires_in_secs
+      end
+
+      # TokenFetcher is an abstract base class that should be extended
+      # for individual token fetcher implementations
+      class TokenFetcher
+        # Get the current access token
+        # 
+        # _@return_ — The fetched TokenResult
+        sig { returns(TokenResult) }
+        def fetch; end
+
+        # Close the token provider and kill any background operations
+        sig { returns(T.untyped) }
+        def close; end
+      end
+
+      # Auth0TokenFetcher is a TokenFetcher that fetches tokens from an Auth0 server
+      class Auth0TokenFetcher < StatelyDB::Common::Auth::TokenFetcher
+        # _@param_ `origin` — The origin of the OAuth server
+        # 
+        # _@param_ `audience` — The OAuth Audience for the token
+        # 
+        # _@param_ `client_secret` — The StatelyDB client secret credential
+        # 
+        # _@param_ `client_id` — The StatelyDB client ID credential
+        sig do
+          params(
+            origin: String,
+            audience: String,
+            client_secret: String,
+            client_id: String
+          ).void
+        end
+        def initialize(origin:, audience:, client_secret:, client_id:); end
+
+        # Fetch a new token from auth0
+        # 
+        # _@return_ — The fetched TokenResult
+        sig { returns(TokenResult) }
+        def fetch; end
+
+        sig { returns(T.untyped) }
+        def close; end
+      end
+
+      # StatelyAccessTokenFetcher is a TokenFetcher that fetches tokens from the StatelyDB API
+      class StatelyAccessTokenFetcher < StatelyDB::Common::Auth::TokenFetcher
+        # _@param_ `origin` — The origin of the OAuth server
+        # 
+        # _@param_ `access_key` — The StatelyDB access key credential
+        sig { params(origin: String, access_key: String).void }
+        def initialize(origin:, access_key:); end
+
+        # Fetch a new token from the StatelyDB API
+        # 
+        # _@return_ — The fetched TokenResult
+        sig { returns(TokenResult) }
+        def fetch; end
+
+        sig { returns(T.untyped) }
+        def close; end
+      end
+
       # TokenProvider is an abstract base class that should be extended
       # for individual token provider implementations
       class TokenProvider
@@ -592,7 +672,7 @@ module StatelyDB
       # which vends tokens from auth0 with the given client_id and client_secret.
       # It will default to using the values of `STATELY_CLIENT_ID` and `STATELY_CLIENT_SECRET` if
       # no credentials are explicitly passed and will throw an error if none are found.
-      class Auth0TokenProvider < StatelyDB::Common::Auth::TokenProvider
+      class AuthTokenProvider < StatelyDB::Common::Auth::TokenProvider
         # _@param_ `origin` — The origin of the OAuth server
         # 
         # _@param_ `audience` — The OAuth Audience for the token
@@ -600,15 +680,18 @@ module StatelyDB
         # _@param_ `client_secret` — The StatelyDB client secret credential
         # 
         # _@param_ `client_id` — The StatelyDB client ID credential
+        # 
+        # _@param_ `access_key` — The StatelyDB access key credential
         sig do
           params(
             origin: String,
             audience: String,
             client_secret: String,
-            client_id: String
+            client_id: String,
+            access_key: String
           ).void
         end
-        def initialize(origin: "https://oauth.stately.cloud", audience: "api.stately.cloud", client_secret: ENV.fetch("STATELY_CLIENT_SECRET"), client_id: ENV.fetch("STATELY_CLIENT_ID")); end
+        def initialize(origin: "https://oauth.stately.cloud", audience: "api.stately.cloud", client_secret: ENV.fetch("STATELY_CLIENT_SECRET", nil), client_id: ENV.fetch("STATELY_CLIENT_ID", nil), access_key: ENV.fetch("STATELY_ACCESS_KEY", nil)); end
 
         # Close the token provider and kill any background operations
         # This just invokes the close method on the actor which should do the cleanup
@@ -636,10 +719,11 @@ module StatelyDB
               origin: String,
               audience: String,
               client_secret: String,
-              client_id: String
+              client_id: String,
+              access_key: T.untyped
             ).void
           end
-          def initialize(origin:, audience:, client_secret:, client_id:); end
+          def initialize(origin:, audience:, client_secret:, client_id:, access_key:); end
 
           # Initialize the actor. This runs on the actor thread which means
           # we can dispatch async operations here.
@@ -675,9 +759,25 @@ module StatelyDB
           # _@return_ — The new access token
           sig { returns(String) }
           def refresh_token_impl; end
+        end
 
+        # Persistent state for the token provider
+        class TokenState
+          # Create a new TokenState
+          # 
+          # _@param_ `token` — The access token
+          # 
+          # _@param_ `expires_at_unix_secs` — The unix timestamp when the token expires
+          sig { params(token: String, expires_at_unix_secs: Integer).void }
+          def initialize(token:, expires_at_unix_secs:); end
+
+          # Returns the value of attribute token.
           sig { returns(T.untyped) }
-          def make_auth0_request; end
+          attr_reader :token
+
+          # Returns the value of attribute expires_at_unix_secs.
+          sig { returns(T.untyped) }
+          attr_reader :expires_at_unix_secs
         end
       end
     end
@@ -1063,6 +1163,22 @@ module Stately
       # DatabaseService is the service for creating, reading, updating and deleting data
       # in a StatelyDB Store. Creating and modifying Stores is done by
       # stately.dbmanagement.ManagementService.
+      class Service
+        include GRPC::GenericService
+      end
+    end
+  end
+
+  module Auth
+    GetAuthTokenRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.auth.GetAuthTokenRequest").msgclass, T.untyped)
+    GetAuthTokenResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.auth.GetAuthTokenResponse").msgclass, T.untyped)
+
+    module AuthService
+      Stub = T.let(Service.rpc_stub_class, T.untyped)
+
+      # AuthService is the service for vending access tokens used to connect to
+      # StatelyDB. This API is meant to be used from SDKs. Access Keys are created
+      # and managed from the stately.dbmanagement.UserService.
       class Service
         include GRPC::GenericService
       end

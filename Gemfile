@@ -12,6 +12,7 @@ group :development do
   gem "benchmark", "0.4.0"
   gem "byebug", "11.1.3"
   gem "debug", "1.9.2"
+  gem "grpc_mock", "0.4.6"
   gem "rspec", "3.13.0"
   gem "rubocop", "1.69.1"
   gem "rubocop-packaging", "0.5.2"

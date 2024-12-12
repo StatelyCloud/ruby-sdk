@@ -11,7 +11,7 @@ module StatelyDB
       class Interceptor < GRPC::ClientInterceptor
         # @param [TokenProvider] token_provider The token provider to use for authentication
         def initialize(
-          token_provider: Auth0TokenProvider.new
+          token_provider: AuthTokenProvider.new
         )
           super()
           @token_provider = token_provider

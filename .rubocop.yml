@@ -50,6 +50,9 @@ Style/CaseEquality:
 Style/ClassAndModuleChildren:
   Enabled: false
 
+Style/MultilineBlockChain:
+  Enabled: false
+
 Style/ModuleFunction:
   Enabled: false
 

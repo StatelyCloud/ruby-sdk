@@ -6,8 +6,10 @@ require "async/http/internet"
 require "async/semaphore"
 require "json"
 require "logger"
-require "weakref"
+require "grpc"
 require_relative "token_provider"
+require_relative "token_fetcher"
+require_relative "../../error"
 
 LOGGER = Logger.new($stdout)
 LOGGER.level = Logger::WARN
@@ -22,20 +24,22 @@ module StatelyDB
       # which vends tokens from auth0 with the given client_id and client_secret.
       # It will default to using the values of `STATELY_CLIENT_ID` and `STATELY_CLIENT_SECRET` if
       # no credentials are explicitly passed and will throw an error if none are found.
-      class Auth0TokenProvider < TokenProvider
+      class AuthTokenProvider < TokenProvider
         # @param [String] origin The origin of the OAuth server
         # @param [String] audience The OAuth Audience for the token
         # @param [String] client_secret The StatelyDB client secret credential
         # @param [String] client_id The StatelyDB client ID credential
+        # @param [String] access_key The StatelyDB access key credential
         def initialize(
           origin: "https://oauth.stately.cloud",
           audience: "api.stately.cloud",
-          client_secret: ENV.fetch("STATELY_CLIENT_SECRET"),
-          client_id: ENV.fetch("STATELY_CLIENT_ID")
+          client_secret: ENV.fetch("STATELY_CLIENT_SECRET", nil),
+          client_id: ENV.fetch("STATELY_CLIENT_ID", nil),
+          access_key: ENV.fetch("STATELY_ACCESS_KEY", nil)
         )
           super()
           @actor = Async::Actor.new(Actor.new(origin: origin, audience: audience,
-                                              client_secret: client_secret, client_id: client_id))
+                                              client_secret: client_secret, client_id: client_id, access_key: access_key))
           # this initialization cannot happen in the constructor because it is async and must run on the event loop
           # which is not available in the constructor
           @actor.init
@@ -64,29 +68,41 @@ module StatelyDB
             origin:,
             audience:,
             client_secret:,
-            client_id:
+            client_id:,
+            access_key:
           )
             super()
-            @client = Async::HTTP::Client.new(Async::HTTP::Endpoint.parse(origin))
-            @client_id = client_id
-            @client_secret = client_secret
-            @audience = audience
 
-            @access_token = nil
-            @expires_at_unix_secs = nil
+            @token_fetcher = nil
+            if !access_key.nil?
+              @token_fetcher = StatelyDB::Common::Auth::StatelyAccessTokenFetcher.new(origin: origin, access_key: access_key)
+            elsif !client_secret.nil? && !client_id.nil?
+              @token_fetcher = StatelyDB::Common::Auth::Auth0TokenFetcher.new(origin: origin, audience: audience,
+                                                                              client_secret: client_secret, client_id: client_id)
+            else
+              raise StatelyDB::Error.new("unable to find client credentials in STATELY_ACCESS_KEY or STATELY_CLIENT_ID and " \
+                                         "STATELY_CLIENT_SECRET environment variables. Either pass your credentials in " \
+                                         "explicitly or set these environment variables",
+                                         code: GRPC::Core::StatusCodes::UNAUTHENTICATED,
+                                         stately_code: "Unauthenticated")
+            end
+
+            @token_state = nil
             @pending_refresh = nil
           end
 
           # Initialize the actor. This runs on the actor thread which means
           # we can dispatch async operations here.
           def init
+            # disable the async lib logger. We do our own error handling and propagation
+            Console.logger.disable(Async::Task)
             refresh_token
           end
 
           # Close the token provider and kill any background operations
           def close
             @scheduled&.stop
-            @client&.close
+            @token_fetcher&.close
           end
 
           # Get the current access token
@@ -94,8 +110,7 @@ module StatelyDB
           # @return [String] The current access token
           def get_token(force: false)
             if force
-              @access_token = nil
-              @expires_at_unix_secs = nil
+              @token_state = nil
             else
               token, ok = valid_access_token
               return token if ok
@@ -107,11 +122,10 @@ module StatelyDB
           # Get the current access token and whether it is valid
           # @return [Array] The current access token and whether it is valid
           def valid_access_token
-            return "", false if @access_token.nil?
-            return "", false if @expires_at_unix_secs.nil?
-            return "", false if @expires_at_unix_secs < Time.now.to_i
+            return "", false if @token_state.nil?
+            return "", false if @token_state.expires_at_unix_secs < Time.now.to_i
 
-            [@access_token, true]
+            [@token_state.token, true]
           end
 
           # Refresh the access token
@@ -151,19 +165,16 @@ module StatelyDB
           # @return [String] The new access token
           def refresh_token_impl
             Sync do
-              resp_data = make_auth0_request
-
-              new_access_token = resp_data["access_token"]
-              new_expires_in_secs = resp_data["expires_in"]
+              token_result = @token_fetcher.fetch
+              new_expires_in_secs = token_result.expires_in_secs
               new_expires_at_unix_secs = Time.now.to_i + new_expires_in_secs
-              if @expires_at_unix_secs.nil? || new_expires_at_unix_secs > @expires_at_unix_secs
 
-                @access_token = new_access_token
-                @expires_at_unix_secs = new_expires_at_unix_secs
+              # only update the token state if the new expiry is later than the current one
+              if @token_state.nil? || new_expires_at_unix_secs > @token_state.expires_at_unix_secs
+                @token_state = TokenState.new(token: token_result.token, expires_at_unix_secs: new_expires_at_unix_secs)
               else
-
-                new_access_token = @access_token
-                new_expires_in_secs = @expires_at_unix_secs - Time.now.to_i
+                # otherwise use the existing expiry time for scheduling the refresh
+                new_expires_in_secs = @token_state.expires_at_unix_secs - Time.now.to_i
               end
 
               # Schedule a refresh of the token ahead of the expiry time
@@ -182,24 +193,21 @@ module StatelyDB
                 @scheduled = nil
               end
 
-              new_access_token
+              @token_state.token
             end
           end
+        end
 
-          def make_auth0_request
-            headers = [["content-type", "application/json"]]
-            body = JSON.dump({ "client_id" => @client_id, client_secret: @client_secret, audience: @audience,
-                               grant_type: DEFAULT_GRANT_TYPE })
-            Sync do
-              # TODO: Wrap this in a retry loop and parse errors like we
-              # do in the Go SDK.
-              response = @client.post("/oauth/token", headers, body)
-              raise "Auth request failed" if response.status != 200
+        # Persistent state for the token provider
+        class TokenState
+          attr_reader :token, :expires_at_unix_secs
 
-              JSON.parse(response.read)
-            ensure
-              response&.close
-            end
+          # Create a new TokenState
+          # @param [String] token The access token
+          # @param [Integer] expires_at_unix_secs The unix timestamp when the token expires
+          def initialize(token:, expires_at_unix_secs:)
+            @token = token
+            @expires_at_unix_secs = expires_at_unix_secs
           end
         end
       end

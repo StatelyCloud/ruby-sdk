@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "api/db/service_services_pb"
-require "common/auth/auth0_token_provider"
+require "common/auth/auth_token_provider"
 require "common/auth/interceptor"
 require "common/net/conn"
 require "common/error_interceptor"
@@ -30,7 +30,7 @@ module StatelyDB
     # @param region [String] the region to connect to.
     def initialize(store_id:,
                    schema:,
-                   token_provider: Common::Auth::Auth0TokenProvider.new,
+                   token_provider: Common::Auth::AuthTokenProvider.new,
                    endpoint: nil,
                    region: nil)
       if store_id.nil?
