@@ -4,13 +4,13 @@
 
 require 'google/protobuf'
 
-require 'db/continue_list_pb'
-require 'db/delete_pb'
-require 'db/get_pb'
-require 'db/item_pb'
-require 'db/item_property_pb'
-require 'db/list_pb'
-require 'db/put_pb'
+require 'api/db/continue_list_pb'
+require 'api/db/delete_pb'
+require 'api/db/get_pb'
+require 'api/db/item_pb'
+require 'api/db/item_property_pb'
+require 'api/db/list_pb'
+require 'api/db/put_pb'
 require 'google/protobuf/empty_pb'
 
 

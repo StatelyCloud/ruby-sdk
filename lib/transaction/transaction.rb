@@ -254,7 +254,7 @@ module StatelyDB
       #
       # @param items [StatelyDB::Item, Array<StatelyDB::Item>] the items to store. Max
       # 50 items.
-      # @return [Array<StatelyDB::UUID, String, Integer, nil>] the ids of the items
+      # @return [Array<StatelyDB::UUID, String, Integer, NilClass>] the ids of the items
       #
       # @example
       #   results = client.data.transaction do |txn|

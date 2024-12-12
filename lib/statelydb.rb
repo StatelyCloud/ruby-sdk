@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-# Add the pb dir to the LOAD_PATH because generated proto imports are not relative and
-# we don't want the protos polluting the main namespace.
-# Tracking here: https://github.com/grpc/grpc/issues/6164
-$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/api"
-
 require "api/db/service_services_pb"
 require "common/auth/auth0_token_provider"
 require "common/auth/interceptor"
@@ -63,6 +58,7 @@ module StatelyDB
       @allow_stale = false
     end
 
+    # @return [void] nil
     def close
       @channel&.close
       @token_provider&.close

@@ -1,0 +1,80 @@
+module GRPC
+  class ActiveCall
+  end
+
+  class Interceptor
+  end
+  class ClientInterceptor < Interceptor
+    # gRPC client unary interceptor
+    #
+    # _@param_ `request` — The request object
+    #
+    # _@param_ `call` — The active call object
+    #
+    # _@param_ `method` — The method being called
+    #
+    # _@param_ `metadata` — The metadata hash
+    #
+    # _@return_ — The response object
+    def request_response: (
+                            request: Object,
+                            call: GRPC::ActiveCall,
+                            method: Symbol,
+                            metadata: ::Hash[untyped, untyped]
+                          ) -> Object
+
+    # gRPC client streaming interceptor
+    #
+    # _@param_ `requests` — The list of requests
+    #
+    # _@param_ `call` — The active call object
+    #
+    # _@param_ `method` — The method being called
+    #
+    # _@param_ `metadata` — The metadata hash
+    #
+    # _@return_ — The response enumerator
+    def client_streamer: (
+                            requests: ::Enumerable[untyped],
+                            call: GRPC::ActiveCall,
+                            method: Symbol,
+                            metadata: ::Hash[untyped, untyped]
+                          ) -> ::Enumerator[untyped]
+
+    # gRPC  server streaming interceptor
+    #
+    # _@param_ `request` — The request object
+    #
+    # _@param_ `call` — The active call object
+    #
+    # _@param_ `method` — The method being called
+    #
+    # _@param_ `metadata` — The metadata hash
+    #
+    # _@return_ — The response enumerator
+    def server_streamer: (
+                            request: Object,
+                            call: GRPC::ActiveCall,
+                            method: Symbol,
+                            metadata: ::Hash[untyped, untyped]
+                          ) -> ::Enumerator[untyped]
+
+    # gRPC bidirectional streaming interceptor
+    #
+    # _@param_ `requests` — The list of requests
+    #
+    # _@param_ `call` — The active call object
+    #
+    # _@param_ `method` — The method being called
+    #
+    # _@param_ `metadata` — The metadata hash
+    #
+    # _@return_ — The response enumerator
+    def bidi_streamer: (
+                          requests: ::Enumerable[untyped],
+                          call: GRPC::ActiveCall,
+                          method: Symbol,
+                          metadata: ::Hash[untyped, untyped]
+                        ) -> ::Enumerator[untyped]
+  end
+end

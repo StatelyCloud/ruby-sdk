@@ -139,13 +139,13 @@ module StatelyDB
     sig { returns(T::Boolean) }
     def can_sync?; end
 
-    # Returns the schema version ID associated with the token.
-    sig { returns(T.untyped) }
-    def schema_version_id; end
-
     # Returns the value of attribute token_data.
     sig { returns(T.untyped) }
     attr_accessor :token_data
+
+    # Returns the schema version ID associated with the token.
+    sig { returns(Integer) }
+    attr_reader :schema_version_id
   end
 
   # KeyPath is a helper class for constructing key paths.
@@ -215,7 +215,8 @@ module StatelyDB
     end
     def initialize(store_id:, schema:, token_provider: Common::Auth::Auth0TokenProvider.new, endpoint: nil, region: nil); end
 
-    sig { returns(T.untyped) }
+    # _@return_ — nil
+    sig { void }
     def close; end
 
     # Set whether to allow stale results for all operations with this client. This produces a new client
@@ -901,7 +902,7 @@ module StatelyDB
       #   txn.put_batch(item1, item2)
       # end
       # ```
-      sig { params(items: T.any(StatelyDB::Item, T::Array[StatelyDB::Item])).returns(T::Array[T.any(StatelyDB::UUID, String, Integer, nil)]) }
+      sig { params(items: T.any(StatelyDB::Item, T::Array[StatelyDB::Item])).returns(T::Array[T.any(StatelyDB::UUID, String, Integer, NilClass)]) }
       def put_batch(*items); end
 
       # Delete up to 50 Items from a StatelyDB Store at the given key_paths. Results are not returned until the transaction is
@@ -1009,6 +1010,67 @@ module StatelyDB
         attr_reader :deletes
       end
     end
+  end
+end
+
+module Stately
+  module Db
+    GetRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.GetRequest").msgclass, T.untyped)
+    GetItem = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.GetItem").msgclass, T.untyped)
+    GetResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.GetResponse").msgclass, T.untyped)
+    PutRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.PutRequest").msgclass, T.untyped)
+    PutItem = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.PutItem").msgclass, T.untyped)
+    PutResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.PutResponse").msgclass, T.untyped)
+    Item = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.Item").msgclass, T.untyped)
+    BeginListRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.BeginListRequest").msgclass, T.untyped)
+    ListResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ListResponse").msgclass, T.untyped)
+    ListPartialResult = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ListPartialResult").msgclass, T.untyped)
+    ListFinished = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ListFinished").msgclass, T.untyped)
+    SortDirection = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.SortDirection").enummodule, T.untyped)
+    DeleteRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.DeleteRequest").msgclass, T.untyped)
+    DeleteItem = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.DeleteItem").msgclass, T.untyped)
+    DeleteResult = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.DeleteResult").msgclass, T.untyped)
+    DeleteResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.DeleteResponse").msgclass, T.untyped)
+    SyncListRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.SyncListRequest").msgclass, T.untyped)
+    SyncListResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.SyncListResponse").msgclass, T.untyped)
+    SyncListReset = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.SyncListReset").msgclass, T.untyped)
+    SyncListPartialResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.SyncListPartialResponse").msgclass, T.untyped)
+    DeletedItem = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.DeletedItem").msgclass, T.untyped)
+    ListToken = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ListToken").msgclass, T.untyped)
+    TransactionRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionRequest").msgclass, T.untyped)
+    TransactionResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionResponse").msgclass, T.untyped)
+    TransactionBegin = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionBegin").msgclass, T.untyped)
+    TransactionGet = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionGet").msgclass, T.untyped)
+    TransactionBeginList = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionBeginList").msgclass, T.untyped)
+    TransactionContinueList = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionContinueList").msgclass, T.untyped)
+    TransactionPut = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionPut").msgclass, T.untyped)
+    TransactionDelete = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionDelete").msgclass, T.untyped)
+    TransactionGetResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionGetResponse").msgclass, T.untyped)
+    GeneratedID = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.GeneratedID").msgclass, T.untyped)
+    TransactionPutAck = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionPutAck").msgclass, T.untyped)
+    TransactionListResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionListResponse").msgclass, T.untyped)
+    TransactionFinished = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionFinished").msgclass, T.untyped)
+    ContinueListRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ContinueListRequest").msgclass, T.untyped)
+    ContinueListDirection = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ContinueListDirection").enummodule, T.untyped)
+    SortableProperty = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.SortableProperty").enummodule, T.untyped)
+    ScanRootPathsRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ScanRootPathsRequest").msgclass, T.untyped)
+    ScanRootPathsResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ScanRootPathsResponse").msgclass, T.untyped)
+    ScanRootPathResult = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ScanRootPathResult").msgclass, T.untyped)
+
+    module DatabaseService
+      Stub = T.let(Service.rpc_stub_class, T.untyped)
+
+      # DatabaseService is the service for creating, reading, updating and deleting data
+      # in a StatelyDB Store. Creating and modifying Stores is done by
+      # stately.dbmanagement.ManagementService.
+      class Service
+        include GRPC::GenericService
+      end
+    end
+  end
+
+  module Errors
+    StatelyErrorDetails = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.errors.StatelyErrorDetails").msgclass, T.untyped)
   end
 end
 

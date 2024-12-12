@@ -2,17 +2,19 @@
 
 Gem::Specification.new do |s|
   s.name = "statelydb"
-  s.version = "0.12.2"
+  s.version = "0.13.0"
   s.required_ruby_version = ">= 3.3.0"
   s.licenses    = ["Apache-2.0"]
   s.summary     = "A library for interacting with StatelyDB"
   s.description = ""
   s.authors     = ["Stately Cloud, Inc."]
-  s.email       = "ruby@stately.cloud"
-  s.files       = ["lib/statelydb.rb", "README.md"]
-  s.files << Dir.glob("lib/**/*")
+  s.email       = "support@stately.cloud"
+  s.files       = ["README.md"]
+  s.files << Dir.glob("lib/**/*.rb")
+  s.files << Dir.glob("sig/**/*.rbs")
+  s.files << Dir.glob("sig/**/*.rbi")
   s.files.flatten!
-  s.homepage = "https://stately.cloud/sdk"
+  s.homepage = "https://docs.stately.cloud/clients/ruby/"
   s.metadata = {
     # this blocks the publisher from publishing unless MFA is enabled on
     # their rubygems account: https://guides.rubygems.org/mfa-requirement-opt-in/

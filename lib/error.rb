@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-# Add the pb dir to the LOAD_PATH because generated proto imports are not relative and
-# we don't want the protos polluting the main namespace.
-# Tracking here: https://github.com/grpc/grpc/issues/6164
-$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/api"
-
 require "api/errors/error_details_pb"
 
 module StatelyDB

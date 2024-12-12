@@ -34,8 +34,7 @@ module StatelyDB
     end
 
     # Returns the schema version ID associated with the token.
-    def schema_version_id
-      !!@schema_version_id
-    end
+    # @return [Integer]
+    attr_reader :schema_version_id
   end
 end

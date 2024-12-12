@@ -4,8 +4,8 @@
 
 require 'google/protobuf'
 
-require 'db/item_pb'
-require 'db/list_pb'
+require 'api/db/item_pb'
+require 'api/db/list_pb'
 
 
 descriptor_data = "\n\x12\x64\x62/sync_list.proto\x12\nstately.db\x1a\rdb/item.proto\x1a\rdb/list.proto\"\\\n\x0fSyncListRequest\x12\x1d\n\ntoken_data\x18\x01 \x01(\x0cR\ttokenData\x12*\n\x11schema_version_id\x18\x05 \x01(\rR\x0fschemaVersionId\"\xc8\x01\n\x10SyncListResponse\x12\x31\n\x05reset\x18\x01 \x01(\x0b\x32\x19.stately.db.SyncListResetH\x00R\x05reset\x12=\n\x06result\x18\x02 \x01(\x0b\x32#.stately.db.SyncListPartialResponseH\x00R\x06result\x12\x36\n\x08\x66inished\x18\x03 \x01(\x0b\x32\x18.stately.db.ListFinishedH\x00R\x08\x66inishedB\n\n\x08response\"\x0f\n\rSyncListReset\"\xdf\x01\n\x17SyncListPartialResponse\x12\x35\n\rchanged_items\x18\x01 \x03(\x0b\x32\x10.stately.db.ItemR\x0c\x63hangedItems\x12<\n\rdeleted_items\x18\x02 \x03(\x0b\x32\x17.stately.db.DeletedItemR\x0c\x64\x65letedItems\x12O\n%updated_item_keys_outside_list_window\x18\x03 \x03(\tR updatedItemKeysOutsideListWindow\"(\n\x0b\x44\x65letedItem\x12\x19\n\x08key_path\x18\x01 \x01(\tR\x07keyPathBh\n\x0e\x63om.stately.dbB\rSyncListProtoP\x01\xa2\x02\x03SDX\xaa\x02\nStately.Db\xca\x02\nStately\\Db\xe2\x02\x16Stately\\Db\\GPBMetadata\xea\x02\x0bStately::Dbb\x06proto3"

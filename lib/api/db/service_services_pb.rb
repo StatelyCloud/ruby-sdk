@@ -2,7 +2,7 @@
 # Source: db/service.proto for package 'Stately.Db'
 
 require 'grpc'
-require 'db/service_pb'
+require 'api/db/service_pb'
 
 module Stately
   module Db

@@ -1,3 +1,2 @@
 --no-private
 --title "StatelyDB Ruby SDK"
---exclude lib/api

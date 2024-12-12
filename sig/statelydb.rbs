@@ -114,11 +114,11 @@ module StatelyDB
     # Returns true if the sync operation can be continued, otherwise false.
     def can_sync?: () -> bool
 
-    # Returns the schema version ID associated with the token.
-    def schema_version_id: () -> untyped
-
     # Returns the value of attribute token_data.
     attr_accessor token_data: untyped
+
+    # Returns the schema version ID associated with the token.
+    attr_reader schema_version_id: Integer
   end
 
   # KeyPath is a helper class for constructing key paths.
@@ -178,7 +178,8 @@ module StatelyDB
                       ?region: String?
                     ) -> void
 
-    def close: () -> untyped
+    # _@return_ — nil
+    def close: () -> void
 
     # Set whether to allow stale results for all operations with this client. This produces a new client
     # with the allow_stale flag set.
@@ -780,7 +781,7 @@ module StatelyDB
       #   txn.put_batch(item1, item2)
       # end
       # ```
-      def put_batch: (*(StatelyDB::Item | ::Array[StatelyDB::Item]) items) -> ::Array[(StatelyDB::UUID | String | Integer | nil)]
+      def put_batch: (*(StatelyDB::Item | ::Array[StatelyDB::Item]) items) -> ::Array[(StatelyDB::UUID | String | Integer | NilClass)]
 
       # Delete up to 50 Items from a StatelyDB Store at the given key_paths. Results are not returned until the transaction is
       # committed and will be available in the Result object returned by commit.
@@ -876,6 +877,67 @@ module StatelyDB
         attr_reader deletes: ::Array[String]
       end
     end
+  end
+end
+
+module Stately
+  module Db
+    GetRequest: untyped
+    GetItem: untyped
+    GetResponse: untyped
+    PutRequest: untyped
+    PutItem: untyped
+    PutResponse: untyped
+    Item: untyped
+    BeginListRequest: untyped
+    ListResponse: untyped
+    ListPartialResult: untyped
+    ListFinished: untyped
+    SortDirection: untyped
+    DeleteRequest: untyped
+    DeleteItem: untyped
+    DeleteResult: untyped
+    DeleteResponse: untyped
+    SyncListRequest: untyped
+    SyncListResponse: untyped
+    SyncListReset: untyped
+    SyncListPartialResponse: untyped
+    DeletedItem: untyped
+    ListToken: untyped
+    TransactionRequest: untyped
+    TransactionResponse: untyped
+    TransactionBegin: untyped
+    TransactionGet: untyped
+    TransactionBeginList: untyped
+    TransactionContinueList: untyped
+    TransactionPut: untyped
+    TransactionDelete: untyped
+    TransactionGetResponse: untyped
+    GeneratedID: untyped
+    TransactionPutAck: untyped
+    TransactionListResponse: untyped
+    TransactionFinished: untyped
+    ContinueListRequest: untyped
+    ContinueListDirection: untyped
+    SortableProperty: untyped
+    ScanRootPathsRequest: untyped
+    ScanRootPathsResponse: untyped
+    ScanRootPathResult: untyped
+
+    module DatabaseService
+      Stub: untyped
+
+      # DatabaseService is the service for creating, reading, updating and deleting data
+      # in a StatelyDB Store. Creating and modifying Stores is done by
+      # stately.dbmanagement.ManagementService.
+      class Service
+        include GRPC::GenericService
+      end
+    end
+  end
+
+  module Errors
+    StatelyErrorDetails: untyped
   end
 end
 
