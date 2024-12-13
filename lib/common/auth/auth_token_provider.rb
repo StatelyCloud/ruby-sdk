@@ -30,16 +30,19 @@ module StatelyDB
         # @param [String] client_secret The StatelyDB client secret credential
         # @param [String] client_id The StatelyDB client ID credential
         # @param [String] access_key The StatelyDB access key credential
+        # @param [Float] base_retry_backoff_secs The base retry backoff in seconds
         def initialize(
           origin: "https://oauth.stately.cloud",
           audience: "api.stately.cloud",
           client_secret: ENV.fetch("STATELY_CLIENT_SECRET", nil),
           client_id: ENV.fetch("STATELY_CLIENT_ID", nil),
-          access_key: ENV.fetch("STATELY_ACCESS_KEY", nil)
+          access_key: ENV.fetch("STATELY_ACCESS_KEY", nil),
+          base_retry_backoff_secs: 1
         )
           super()
           @actor = Async::Actor.new(Actor.new(origin: origin, audience: audience,
-                                              client_secret: client_secret, client_id: client_id, access_key: access_key))
+                                              client_secret: client_secret, client_id: client_id, access_key: access_key,
+                                              base_retry_backoff_secs: base_retry_backoff_secs))
           # this initialization cannot happen in the constructor because it is async and must run on the event loop
           # which is not available in the constructor
           @actor.init
@@ -64,18 +67,23 @@ module StatelyDB
           # @param [String] audience The OAuth Audience for the token
           # @param [String] client_secret The StatelyDB client secret credential
           # @param [String] client_id The StatelyDB client ID credential
+          # @param [String] access_key The StatelyDB access key credential
+          # @param [Float] base_retry_backoff_secs The base retry backoff in seconds
           def initialize(
             origin:,
             audience:,
             client_secret:,
             client_id:,
-            access_key:
+            access_key:,
+            base_retry_backoff_secs:
           )
             super()
 
             @token_fetcher = nil
             if !access_key.nil?
-              @token_fetcher = StatelyDB::Common::Auth::StatelyAccessTokenFetcher.new(origin: origin, access_key: access_key)
+              @token_fetcher = StatelyDB::Common::Auth::StatelyAccessTokenFetcher.new(
+                origin: origin, access_key: access_key, base_retry_backoff_secs: base_retry_backoff_secs
+              )
             elsif !client_secret.nil? && !client_id.nil?
               @token_fetcher = StatelyDB::Common::Auth::Auth0TokenFetcher.new(origin: origin, audience: audience,
                                                                               client_secret: client_secret, client_id: client_id)

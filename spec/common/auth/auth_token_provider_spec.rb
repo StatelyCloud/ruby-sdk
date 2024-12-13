@@ -176,6 +176,62 @@ RSpec.describe "AuthTokenProvider" do
     provider.close
   end
 
+  it "retries stately errors with retryable error codes" do
+    count = 0
+    GrpcMock.stub_request("/stately.auth.AuthService/GetAuthToken").to_return do |_req, _call|
+      count += 1
+      if count == 1
+        raise StatelyDB::Error.new("Some error", code: GRPC::Core::StatusCodes::UNAVAILABLE, stately_code: "Unavailable")
+      end
+
+      Stately::Auth::GetAuthTokenResponse.new(
+        auth_token: "test-token", expires_in_s: 100
+      )
+    end
+    provider = StatelyDB::Common::Auth::AuthTokenProvider.new(access_key: "test-access-key")
+    expect(provider.get_token).to eql("test-token")
+    expect(count).to be(2)
+  ensure
+    provider.close
+  end
+
+  it "does not retry stately errors with non-retryable error codes" do
+    count = 0
+    GrpcMock.stub_request("/stately.auth.AuthService/GetAuthToken").to_return do |_req, _call|
+      count += 1
+      raise StatelyDB::Error.new("Some error",
+                                 code: GRPC::Core::StatusCodes::UNAUTHENTICATED, stately_code: "Unauthenticated")
+    end
+    provider = StatelyDB::Common::Auth::AuthTokenProvider.new(access_key: "test-access-key", base_retry_backoff_secs: 0)
+    expect { provider.get_token }.to raise_exception(StatelyDB::Error) do |e|
+      expect(e.message).to eql("(Unauthenticated/Unauthenticated): Some error")
+    end
+    # one for the initial refresh that the constructor does and one for the actual get_token call
+    expect(count).to eq(2)
+  ensure
+    provider.close
+  end
+
+  it "retries stately errors until some maximum number of attempts" do
+    count = 0
+    GrpcMock.stub_request("/stately.auth.AuthService/GetAuthToken").to_return do |_req, _call|
+      count += 1
+      raise StatelyDB::Error.new("Some error",
+                                 code: GRPC::Core::StatusCodes::UNAVAILABLE, stately_code: "Unavailable")
+    end
+
+    provider = StatelyDB::Common::Auth::AuthTokenProvider.new(access_key: "test-access-key", base_retry_backoff_secs: 0)
+    expect { provider.get_token }.to raise_exception(StatelyDB::Error) do |e|
+      expect(e.message).to eql("(Unavailable/Unavailable): Some error")
+    end
+
+    # this should be 20, 10 for the initial refresh that the constructor does and 10 for the actual get_token call
+    # we do a simpler check here so that the test is rob
+    expect(count).to eq(2 * StatelyDB::Common::Auth::StatelyAccessTokenFetcher::RETRY_ATTEMPTS)
+  ensure
+    provider.close
+  end
+
   it "overrides the auth0 expiry if force flag is set" do
     #  set a really long token expiry
     call_count = 0

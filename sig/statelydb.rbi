@@ -636,11 +636,22 @@ module StatelyDB
 
       # StatelyAccessTokenFetcher is a TokenFetcher that fetches tokens from the StatelyDB API
       class StatelyAccessTokenFetcher < StatelyDB::Common::Auth::TokenFetcher
+        NON_RETRYABLE_ERRORS = T.let([
+  GRPC::Core::StatusCodes::UNAUTHENTICATED,
+  GRPC::Core::StatusCodes::PERMISSION_DENIED,
+  GRPC::Core::StatusCodes::NOT_FOUND,
+  GRPC::Core::StatusCodes::UNIMPLEMENTED,
+  GRPC::Core::StatusCodes::INVALID_ARGUMENT
+].freeze, T.untyped)
+        RETRY_ATTEMPTS = T.let(10, T.untyped)
+
         # _@param_ `origin` — The origin of the OAuth server
         # 
         # _@param_ `access_key` — The StatelyDB access key credential
-        sig { params(origin: String, access_key: String).void }
-        def initialize(origin:, access_key:); end
+        # 
+        # _@param_ `base_retry_backoff_secs` — The base backoff time in seconds
+        sig { params(origin: String, access_key: String, base_retry_backoff_secs: Float).void }
+        def initialize(origin:, access_key:, base_retry_backoff_secs:); end
 
         # Fetch a new token from the StatelyDB API
         # 
@@ -650,6 +661,14 @@ module StatelyDB
 
         sig { returns(T.untyped) }
         def close; end
+
+        # Check if an error is retryable
+        # 
+        # _@param_ `err` — The error to check
+        # 
+        # _@return_ — True if the error is retryable
+        sig { params(err: StatelyDB::Error).returns(T::Boolean) }
+        def self.retryable_error?(err); end
       end
 
       # TokenProvider is an abstract base class that should be extended
@@ -682,16 +701,19 @@ module StatelyDB
         # _@param_ `client_id` — The StatelyDB client ID credential
         # 
         # _@param_ `access_key` — The StatelyDB access key credential
+        # 
+        # _@param_ `base_retry_backoff_secs` — The base retry backoff in seconds
         sig do
           params(
             origin: String,
             audience: String,
             client_secret: String,
             client_id: String,
-            access_key: String
+            access_key: String,
+            base_retry_backoff_secs: Float
           ).void
         end
-        def initialize(origin: "https://oauth.stately.cloud", audience: "api.stately.cloud", client_secret: ENV.fetch("STATELY_CLIENT_SECRET", nil), client_id: ENV.fetch("STATELY_CLIENT_ID", nil), access_key: ENV.fetch("STATELY_ACCESS_KEY", nil)); end
+        def initialize(origin: "https://oauth.stately.cloud", audience: "api.stately.cloud", client_secret: ENV.fetch("STATELY_CLIENT_SECRET", nil), client_id: ENV.fetch("STATELY_CLIENT_ID", nil), access_key: ENV.fetch("STATELY_ACCESS_KEY", nil), base_retry_backoff_secs: 1); end
 
         # Close the token provider and kill any background operations
         # This just invokes the close method on the actor which should do the cleanup
@@ -714,16 +736,21 @@ module StatelyDB
           # _@param_ `client_secret` — The StatelyDB client secret credential
           # 
           # _@param_ `client_id` — The StatelyDB client ID credential
+          # 
+          # _@param_ `access_key` — The StatelyDB access key credential
+          # 
+          # _@param_ `base_retry_backoff_secs` — The base retry backoff in seconds
           sig do
             params(
               origin: String,
               audience: String,
               client_secret: String,
               client_id: String,
-              access_key: T.untyped
+              access_key: String,
+              base_retry_backoff_secs: Float
             ).void
           end
-          def initialize(origin:, audience:, client_secret:, client_id:, access_key:); end
+          def initialize(origin:, audience:, client_secret:, client_id:, access_key:, base_retry_backoff_secs:); end
 
           # Initialize the actor. This runs on the actor thread which means
           # we can dispatch async operations here.

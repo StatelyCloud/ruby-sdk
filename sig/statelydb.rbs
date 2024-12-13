@@ -550,10 +550,15 @@ module StatelyDB
 
       # StatelyAccessTokenFetcher is a TokenFetcher that fetches tokens from the StatelyDB API
       class StatelyAccessTokenFetcher < StatelyDB::Common::Auth::TokenFetcher
+        NON_RETRYABLE_ERRORS: untyped
+        RETRY_ATTEMPTS: untyped
+
         # _@param_ `origin` — The origin of the OAuth server
         # 
         # _@param_ `access_key` — The StatelyDB access key credential
-        def initialize: (origin: String, access_key: String) -> void
+        # 
+        # _@param_ `base_retry_backoff_secs` — The base backoff time in seconds
+        def initialize: (origin: String, access_key: String, base_retry_backoff_secs: Float) -> void
 
         # Fetch a new token from the StatelyDB API
         # 
@@ -561,6 +566,13 @@ module StatelyDB
         def fetch: () -> TokenResult
 
         def close: () -> untyped
+
+        # Check if an error is retryable
+        # 
+        # _@param_ `err` — The error to check
+        # 
+        # _@return_ — True if the error is retryable
+        def self.retryable_error?: (StatelyDB::Error err) -> bool
       end
 
       # TokenProvider is an abstract base class that should be extended
@@ -591,12 +603,15 @@ module StatelyDB
         # _@param_ `client_id` — The StatelyDB client ID credential
         # 
         # _@param_ `access_key` — The StatelyDB access key credential
+        # 
+        # _@param_ `base_retry_backoff_secs` — The base retry backoff in seconds
         def initialize: (
                           ?origin: String,
                           ?audience: String,
                           ?client_secret: String,
                           ?client_id: String,
-                          ?access_key: String
+                          ?access_key: String,
+                          ?base_retry_backoff_secs: Float
                         ) -> void
 
         # Close the token provider and kill any background operations
@@ -618,12 +633,17 @@ module StatelyDB
           # _@param_ `client_secret` — The StatelyDB client secret credential
           # 
           # _@param_ `client_id` — The StatelyDB client ID credential
+          # 
+          # _@param_ `access_key` — The StatelyDB access key credential
+          # 
+          # _@param_ `base_retry_backoff_secs` — The base retry backoff in seconds
           def initialize: (
                             origin: String,
                             audience: String,
                             client_secret: String,
                             client_id: String,
-                            access_key: untyped
+                            access_key: String,
+                            base_retry_backoff_secs: Float
                           ) -> void
 
           # Initialize the actor. This runs on the actor thread which means
