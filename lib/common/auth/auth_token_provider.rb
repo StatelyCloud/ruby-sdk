@@ -13,35 +13,27 @@ require_relative "../../error"
 
 LOGGER = Logger.new($stdout)
 LOGGER.level = Logger::WARN
-DEFAULT_GRANT_TYPE = "client_credentials"
 
 # A module for Stately Cloud auth code
 module StatelyDB
   module Common
     # A module for Stately Cloud auth code
     module Auth
-      # Auth0TokenProvider is an implementation of the TokenProvider abstract base class
-      # which vends tokens from auth0 with the given client_id and client_secret.
-      # It will default to using the values of `STATELY_CLIENT_ID` and `STATELY_CLIENT_SECRET` if
-      # no credentials are explicitly passed and will throw an error if none are found.
+      # AuthTokenProvider is an implementation of the TokenProvider abstract base class
+      # which vends tokens from the StatelyDB auth API.
+      # It will default to using the value of `STATELY_ACCESS_KEY` if
+      # no credentials are explicitly passed and will throw an error if no credentials are found.
       class AuthTokenProvider < TokenProvider
-        # @param [String] origin The origin of the OAuth server
-        # @param [String] audience The OAuth Audience for the token
-        # @param [String] client_secret The StatelyDB client secret credential
-        # @param [String] client_id The StatelyDB client ID credential
+        # @param [String] origin The origin of the auth server
         # @param [String] access_key The StatelyDB access key credential
         # @param [Float] base_retry_backoff_secs The base retry backoff in seconds
         def initialize(
-          origin: "https://oauth.stately.cloud",
-          audience: "api.stately.cloud",
-          client_secret: ENV.fetch("STATELY_CLIENT_SECRET", nil),
-          client_id: ENV.fetch("STATELY_CLIENT_ID", nil),
+          origin: "https://api.stately.cloud",
           access_key: ENV.fetch("STATELY_ACCESS_KEY", nil),
           base_retry_backoff_secs: 1
         )
           super()
-          @actor = Async::Actor.new(Actor.new(origin: origin, audience: audience,
-                                              client_secret: client_secret, client_id: client_id, access_key: access_key,
+          @actor = Async::Actor.new(Actor.new(origin: origin, access_key: access_key,
                                               base_retry_backoff_secs: base_retry_backoff_secs))
           # this initialization cannot happen in the constructor because it is async and must run on the event loop
           # which is not available in the constructor
@@ -64,37 +56,26 @@ module StatelyDB
         # This is designed to be used with Async::Actor and run on a dedicated thread.
         class Actor
           # @param [String] origin The origin of the OAuth server
-          # @param [String] audience The OAuth Audience for the token
-          # @param [String] client_secret The StatelyDB client secret credential
-          # @param [String] client_id The StatelyDB client ID credential
           # @param [String] access_key The StatelyDB access key credential
           # @param [Float] base_retry_backoff_secs The base retry backoff in seconds
-          def initialize(
-            origin:,
-            audience:,
-            client_secret:,
-            client_id:,
-            access_key:,
-            base_retry_backoff_secs:
-          )
+          def initialize(origin:, access_key:, base_retry_backoff_secs:)
             super()
 
-            @token_fetcher = nil
-            if !access_key.nil?
-              @token_fetcher = StatelyDB::Common::Auth::StatelyAccessTokenFetcher.new(
-                origin: origin, access_key: access_key, base_retry_backoff_secs: base_retry_backoff_secs
+            if access_key.nil?
+              raise StatelyDB::Error.new(
+                "Unable to find an access key in the STATELY_ACCESS_KEY " \
+                "environment variable. Either pass your credentials in " \
+                "the options when creating a client or set this environment variable.",
+                code: GRPC::Core::StatusCodes::UNAUTHENTICATED,
+                stately_code: "Unauthenticated"
               )
-            elsif !client_secret.nil? && !client_id.nil?
-              @token_fetcher = StatelyDB::Common::Auth::Auth0TokenFetcher.new(origin: origin, audience: audience,
-                                                                              client_secret: client_secret, client_id: client_id)
-            else
-              raise StatelyDB::Error.new("unable to find client credentials in STATELY_ACCESS_KEY or STATELY_CLIENT_ID and " \
-                                         "STATELY_CLIENT_SECRET environment variables. Either pass your credentials in " \
-                                         "explicitly or set these environment variables",
-                                         code: GRPC::Core::StatusCodes::UNAUTHENTICATED,
-                                         stately_code: "Unauthenticated")
             end
 
+            @token_fetcher = StatelyDB::Common::Auth::StatelyAccessTokenFetcher.new(
+              origin: origin,
+              access_key: access_key,
+              base_retry_backoff_secs: base_retry_backoff_secs
+            )
             @token_state = nil
             @pending_refresh = nil
           end

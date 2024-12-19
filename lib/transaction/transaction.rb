@@ -233,6 +233,12 @@ module StatelyDB
       #   `initialValue` field in its key, that initial value will automatically
       #   be chosen not to conflict with existing items, so this condition only
       #   applies to key paths that do not contain the `initialValue` field.
+      # @param overwrite_metadata_timestamps [Boolean] If set to true, the server will
+      #   set the `createdAtTime` and/or `lastModifiedAtTime` fields based on the
+      #   current values in this item (assuming you've mapped them to a field using
+      #   `fromMetadata`). Without this, those fields are always ignored and the
+      #   server sets them to the appropriate times. This option can be useful when
+      #   migrating data from another system.
       # @return [String, Integer] the id of the item
       #
       # @example
@@ -242,8 +248,10 @@ module StatelyDB
       #  results.puts.each do |result|
       #    puts result.key_path
       #  end
-      def put(item, must_not_exist: false)
-        resp = put_batch({ item:, must_not_exist: })
+      def put(item,
+              must_not_exist: false,
+              overwrite_metadata_timestamps: false)
+        resp = put_batch({ item:, must_not_exist:, overwrite_metadata_timestamps: })
         resp.first
       end
 
@@ -269,6 +277,7 @@ module StatelyDB
             item = input[:item]
             Stately::Db::PutItem.new(
               item: item.send("marshal_stately"),
+              overwrite_metadata_timestamps: input[:overwrite_metadata_timestamps],
               must_not_exist: input[:must_not_exist]
             )
           else

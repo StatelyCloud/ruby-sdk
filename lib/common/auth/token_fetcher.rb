@@ -37,42 +37,6 @@ module StatelyDB
         end
       end
 
-      # Auth0TokenFetcher is a TokenFetcher that fetches tokens from an Auth0 server
-      class Auth0TokenFetcher < TokenFetcher
-        # @param [String] origin The origin of the OAuth server
-        # @param [String] audience The OAuth Audience for the token
-        # @param [String] client_secret The StatelyDB client secret credential
-        # @param [String] client_id The StatelyDB client ID credential
-        def initialize(origin:, audience:, client_secret:, client_id:)
-          super()
-          @client = Async::HTTP::Client.new(Async::HTTP::Endpoint.parse(origin))
-          @audience = audience
-          @client_secret = client_secret
-          @client_id = client_id
-        end
-
-        # Fetch a new token from auth0
-        # @return [TokenResult] The fetched TokenResult
-        def fetch
-          headers = [["content-type", "application/json"]]
-          body = JSON.dump({ "client_id" => @client_id, client_secret: @client_secret, audience: @audience,
-                             grant_type: DEFAULT_GRANT_TYPE })
-          Sync do
-            response = @client.post("/oauth/token", headers, body)
-            raise "Auth request failed" if response.status != 200
-
-            resp_data = JSON.parse(response.read)
-            TokenResult.new(token: resp_data["access_token"], expires_in_secs: resp_data["expires_in"])
-          ensure
-            response&.close
-          end
-        end
-
-        def close
-          @client&.close
-        end
-      end
-
       # StatelyAccessTokenFetcher is a TokenFetcher that fetches tokens from the StatelyDB API
       class StatelyAccessTokenFetcher < TokenFetcher
         NON_RETRYABLE_ERRORS = [

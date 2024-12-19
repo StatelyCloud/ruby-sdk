@@ -313,6 +313,8 @@ module StatelyDB
     # 
     # _@param_ `must_not_exist` — A condition that indicates this item must not already exist at any of its key paths. If there is already an item at one of those paths, the Put operation will fail with a "ConditionalCheckFailed" error. Note that if the item has an `initialValue` field in its key, that initial value will automatically be chosen not to conflict with existing items, so this condition only applies to key paths that do not contain the `initialValue` field.
     # 
+    # _@param_ `overwrite_metadata_timestamps` — If set to true, the server will set the `createdAtTime` and/or `lastModifiedAtTime` fields based on the current values in this item (assuming you've mapped them to a field using `fromMetadata`). Without this, those fields are always ignored and the server sets them to the appropriate times. This option can be useful when migrating data from another system.
+    # 
     # _@return_ — the item that was stored
     # 
     # client.data.put(my_item)
@@ -322,8 +324,8 @@ module StatelyDB
     # client.data.put(my_item, must_not_exist: true)
     # ```ruby
     # ```
-    sig { params(item: StatelyDB::Item, must_not_exist: T::Boolean).returns(StatelyDB::Item) }
-    def put(item, must_not_exist: false); end
+    sig { params(item: StatelyDB::Item, must_not_exist: T::Boolean, overwrite_metadata_timestamps: T::Boolean).returns(StatelyDB::Item) }
+    def put(item, must_not_exist: false, overwrite_metadata_timestamps: false); end
 
     # Put a batch of up to 50 Items into a StatelyDB Store.
     # 
@@ -605,35 +607,6 @@ module StatelyDB
         def close; end
       end
 
-      # Auth0TokenFetcher is a TokenFetcher that fetches tokens from an Auth0 server
-      class Auth0TokenFetcher < StatelyDB::Common::Auth::TokenFetcher
-        # _@param_ `origin` — The origin of the OAuth server
-        # 
-        # _@param_ `audience` — The OAuth Audience for the token
-        # 
-        # _@param_ `client_secret` — The StatelyDB client secret credential
-        # 
-        # _@param_ `client_id` — The StatelyDB client ID credential
-        sig do
-          params(
-            origin: String,
-            audience: String,
-            client_secret: String,
-            client_id: String
-          ).void
-        end
-        def initialize(origin:, audience:, client_secret:, client_id:); end
-
-        # Fetch a new token from auth0
-        # 
-        # _@return_ — The fetched TokenResult
-        sig { returns(TokenResult) }
-        def fetch; end
-
-        sig { returns(T.untyped) }
-        def close; end
-      end
-
       # StatelyAccessTokenFetcher is a TokenFetcher that fetches tokens from the StatelyDB API
       class StatelyAccessTokenFetcher < StatelyDB::Common::Auth::TokenFetcher
         NON_RETRYABLE_ERRORS = T.let([
@@ -687,33 +660,18 @@ module StatelyDB
         def close; end
       end
 
-      # Auth0TokenProvider is an implementation of the TokenProvider abstract base class
-      # which vends tokens from auth0 with the given client_id and client_secret.
-      # It will default to using the values of `STATELY_CLIENT_ID` and `STATELY_CLIENT_SECRET` if
-      # no credentials are explicitly passed and will throw an error if none are found.
+      # AuthTokenProvider is an implementation of the TokenProvider abstract base class
+      # which vends tokens from the StatelyDB auth API.
+      # It will default to using the value of `STATELY_ACCESS_KEY` if
+      # no credentials are explicitly passed and will throw an error if no credentials are found.
       class AuthTokenProvider < StatelyDB::Common::Auth::TokenProvider
-        # _@param_ `origin` — The origin of the OAuth server
-        # 
-        # _@param_ `audience` — The OAuth Audience for the token
-        # 
-        # _@param_ `client_secret` — The StatelyDB client secret credential
-        # 
-        # _@param_ `client_id` — The StatelyDB client ID credential
+        # _@param_ `origin` — The origin of the auth server
         # 
         # _@param_ `access_key` — The StatelyDB access key credential
         # 
         # _@param_ `base_retry_backoff_secs` — The base retry backoff in seconds
-        sig do
-          params(
-            origin: String,
-            audience: String,
-            client_secret: String,
-            client_id: String,
-            access_key: String,
-            base_retry_backoff_secs: Float
-          ).void
-        end
-        def initialize(origin: "https://oauth.stately.cloud", audience: "api.stately.cloud", client_secret: ENV.fetch("STATELY_CLIENT_SECRET", nil), client_id: ENV.fetch("STATELY_CLIENT_ID", nil), access_key: ENV.fetch("STATELY_ACCESS_KEY", nil), base_retry_backoff_secs: 1); end
+        sig { params(origin: String, access_key: String, base_retry_backoff_secs: Float).void }
+        def initialize(origin: "https://api.stately.cloud", access_key: ENV.fetch("STATELY_ACCESS_KEY", nil), base_retry_backoff_secs: 1); end
 
         # Close the token provider and kill any background operations
         # This just invokes the close method on the actor which should do the cleanup
@@ -731,26 +689,11 @@ module StatelyDB
         class Actor
           # _@param_ `origin` — The origin of the OAuth server
           # 
-          # _@param_ `audience` — The OAuth Audience for the token
-          # 
-          # _@param_ `client_secret` — The StatelyDB client secret credential
-          # 
-          # _@param_ `client_id` — The StatelyDB client ID credential
-          # 
           # _@param_ `access_key` — The StatelyDB access key credential
           # 
           # _@param_ `base_retry_backoff_secs` — The base retry backoff in seconds
-          sig do
-            params(
-              origin: String,
-              audience: String,
-              client_secret: String,
-              client_id: String,
-              access_key: String,
-              base_retry_backoff_secs: Float
-            ).void
-          end
-          def initialize(origin:, audience:, client_secret:, client_id:, access_key:, base_retry_backoff_secs:); end
+          sig { params(origin: String, access_key: String, base_retry_backoff_secs: Float).void }
+          def initialize(origin:, access_key:, base_retry_backoff_secs:); end
 
           # Initialize the actor. This runs on the actor thread which means
           # we can dispatch async operations here.
@@ -1000,6 +943,8 @@ module StatelyDB
       # 
       # _@param_ `must_not_exist` — A condition that indicates this item must not already exist at any of its key paths. If there is already an item at one of those paths, the Put operation will fail with a "ConditionalCheckFailed" error. Note that if the item has an `initialValue` field in its key, that initial value will automatically be chosen not to conflict with existing items, so this condition only applies to key paths that do not contain the `initialValue` field.
       # 
+      # _@param_ `overwrite_metadata_timestamps` — If set to true, the server will set the `createdAtTime` and/or `lastModifiedAtTime` fields based on the current values in this item (assuming you've mapped them to a field using `fromMetadata`). Without this, those fields are always ignored and the server sets them to the appropriate times. This option can be useful when migrating data from another system.
+      # 
       # _@return_ — the id of the item
       # 
       # ```ruby
@@ -1007,8 +952,8 @@ module StatelyDB
       #   txn.put(my_item)
       # end
       # ```
-      sig { params(item: StatelyDB::Item, must_not_exist: T::Boolean).returns(T.any(String, Integer)) }
-      def put(item, must_not_exist: false); end
+      sig { params(item: StatelyDB::Item, must_not_exist: T::Boolean, overwrite_metadata_timestamps: T::Boolean).returns(T.any(String, Integer)) }
+      def put(item, must_not_exist: false, overwrite_metadata_timestamps: false); end
 
       # Put a batch of up to 50 Items into a StatelyDB Store. Results are not
       # returned until the transaction is committed and will be available in the
