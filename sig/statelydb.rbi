@@ -204,16 +204,19 @@ module StatelyDB
     # _@param_ `endpoint` — the endpoint to connect to.
     # 
     # _@param_ `region` — the region to connect to.
+    # 
+    # _@param_ `no_auth` — Indicates that the client should not attempt to get an auth token. This is used when talking to the Stately BYOC Data Plane on localhost.
     sig do
       params(
         store_id: Integer,
         schema: Module,
         token_provider: Common::Auth::TokenProvider,
         endpoint: T.nilable(String),
-        region: T.nilable(String)
+        region: T.nilable(String),
+        no_auth: T::Boolean
       ).void
     end
-    def initialize(store_id:, schema:, token_provider: Common::Auth::AuthTokenProvider.new, endpoint: nil, region: nil); end
+    def initialize(store_id:, schema:, token_provider: Common::Auth::AuthTokenProvider.new, endpoint: nil, region: nil, no_auth: false); end
 
     # _@return_ — nil
     sig { void }
@@ -618,13 +621,13 @@ module StatelyDB
 ].freeze, T.untyped)
         RETRY_ATTEMPTS = T.let(10, T.untyped)
 
-        # _@param_ `origin` — The origin of the OAuth server
+        # _@param_ `endpoint` — The endpoint of the OAuth server
         # 
         # _@param_ `access_key` — The StatelyDB access key credential
         # 
         # _@param_ `base_retry_backoff_secs` — The base backoff time in seconds
-        sig { params(origin: String, access_key: String, base_retry_backoff_secs: Float).void }
-        def initialize(origin:, access_key:, base_retry_backoff_secs:); end
+        sig { params(endpoint: String, access_key: String, base_retry_backoff_secs: Float).void }
+        def initialize(endpoint:, access_key:, base_retry_backoff_secs:); end
 
         # Fetch a new token from the StatelyDB API
         # 
@@ -665,13 +668,13 @@ module StatelyDB
       # It will default to using the value of `STATELY_ACCESS_KEY` if
       # no credentials are explicitly passed and will throw an error if no credentials are found.
       class AuthTokenProvider < StatelyDB::Common::Auth::TokenProvider
-        # _@param_ `origin` — The origin of the auth server
+        # _@param_ `endpoint` — The endpoint of the auth server
         # 
         # _@param_ `access_key` — The StatelyDB access key credential
         # 
         # _@param_ `base_retry_backoff_secs` — The base retry backoff in seconds
-        sig { params(origin: String, access_key: String, base_retry_backoff_secs: Float).void }
-        def initialize(origin: "https://api.stately.cloud", access_key: ENV.fetch("STATELY_ACCESS_KEY", nil), base_retry_backoff_secs: 1); end
+        sig { params(endpoint: String, access_key: String, base_retry_backoff_secs: Float).void }
+        def initialize(endpoint: "https://api.stately.cloud", access_key: ENV.fetch("STATELY_ACCESS_KEY", nil), base_retry_backoff_secs: 1); end
 
         # Close the token provider and kill any background operations
         # This just invokes the close method on the actor which should do the cleanup
@@ -687,13 +690,13 @@ module StatelyDB
         # Actor for managing the token refresh
         # This is designed to be used with Async::Actor and run on a dedicated thread.
         class Actor
-          # _@param_ `origin` — The origin of the OAuth server
+          # _@param_ `endpoint` — The endpoint of the OAuth server
           # 
           # _@param_ `access_key` — The StatelyDB access key credential
           # 
           # _@param_ `base_retry_backoff_secs` — The base retry backoff in seconds
-          sig { params(origin: String, access_key: String, base_retry_backoff_secs: Float).void }
-          def initialize(origin:, access_key:, base_retry_backoff_secs:); end
+          sig { params(endpoint: String, access_key: String, base_retry_backoff_secs: Float).void }
+          def initialize(endpoint:, access_key:, base_retry_backoff_secs:); end
 
           # Initialize the actor. This runs on the actor thread which means
           # we can dispatch async operations here.

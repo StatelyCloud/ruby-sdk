@@ -48,14 +48,14 @@ module StatelyDB
         ].freeze
         RETRY_ATTEMPTS = 10
 
-        # @param [String] origin The origin of the OAuth server
+        # @param [String] endpoint The endpoint of the OAuth server
         # @param [String] access_key The StatelyDB access key credential
         # @param [Float] base_retry_backoff_secs The base backoff time in seconds
-        def initialize(origin:, access_key:, base_retry_backoff_secs:)
+        def initialize(endpoint:, access_key:, base_retry_backoff_secs:)
           super()
           @access_key = access_key
           @base_retry_backoff_secs = base_retry_backoff_secs
-          @channel = Common::Net.new_channel(endpoint: origin)
+          @channel = Common::Net.new_channel(endpoint:)
           error_interceptor = Common::ErrorInterceptor.new
           @stub = Stately::Auth::AuthService::Stub.new(nil, nil, channel_override: @channel,
                                                                  interceptors: [error_interceptor])

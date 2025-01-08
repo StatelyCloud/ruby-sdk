@@ -58,7 +58,7 @@ module StatelyDB
         [value].pack("m0").tr("=", "").tr("+/", "-_")
       else
         # Any other value is just converted to a string
-        value.to_s
+        value.to_s.gsub("/", "%/")
       end
     end
   end

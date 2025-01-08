@@ -24,17 +24,16 @@ module StatelyDB
       # It will default to using the value of `STATELY_ACCESS_KEY` if
       # no credentials are explicitly passed and will throw an error if no credentials are found.
       class AuthTokenProvider < TokenProvider
-        # @param [String] origin The origin of the auth server
+        # @param [String] endpoint The endpoint of the auth server
         # @param [String] access_key The StatelyDB access key credential
         # @param [Float] base_retry_backoff_secs The base retry backoff in seconds
         def initialize(
-          origin: "https://api.stately.cloud",
+          endpoint: "https://api.stately.cloud",
           access_key: ENV.fetch("STATELY_ACCESS_KEY", nil),
           base_retry_backoff_secs: 1
         )
           super()
-          @actor = Async::Actor.new(Actor.new(origin: origin, access_key: access_key,
-                                              base_retry_backoff_secs: base_retry_backoff_secs))
+          @actor = Async::Actor.new(Actor.new(endpoint:, access_key:, base_retry_backoff_secs:))
           # this initialization cannot happen in the constructor because it is async and must run on the event loop
           # which is not available in the constructor
           @actor.init
@@ -55,10 +54,10 @@ module StatelyDB
         # Actor for managing the token refresh
         # This is designed to be used with Async::Actor and run on a dedicated thread.
         class Actor
-          # @param [String] origin The origin of the OAuth server
+          # @param [String] endpoint The endpoint of the OAuth server
           # @param [String] access_key The StatelyDB access key credential
           # @param [Float] base_retry_backoff_secs The base retry backoff in seconds
-          def initialize(origin:, access_key:, base_retry_backoff_secs:)
+          def initialize(endpoint:, access_key:, base_retry_backoff_secs:)
             super()
 
             if access_key.nil?
@@ -72,7 +71,7 @@ module StatelyDB
             end
 
             @token_fetcher = StatelyDB::Common::Auth::StatelyAccessTokenFetcher.new(
-              origin: origin,
+              endpoint: endpoint,
               access_key: access_key,
               base_retry_backoff_secs: base_retry_backoff_secs
             )

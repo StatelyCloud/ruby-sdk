@@ -28,11 +28,14 @@ module StatelyDB
     # @param token_provider [Common::Auth::TokenProvider] the token provider to use for authentication.
     # @param endpoint [String] the endpoint to connect to.
     # @param region [String] the region to connect to.
+    # @param no_auth [Boolean] Indicates that the client should not attempt to get
+    #     an auth token. This is used when talking to the Stately BYOC Data Plane on localhost.
     def initialize(store_id:,
                    schema:,
                    token_provider: Common::Auth::AuthTokenProvider.new,
                    endpoint: nil,
-                   region: nil)
+                   region: nil,
+                   no_auth: false)
       if store_id.nil?
         raise StatelyDB::Error.new("store_id is required",
                                    code: GRPC::Core::StatusCodes::INVALID_ARGUMENT,
@@ -46,13 +49,14 @@ module StatelyDB
 
       endpoint = self.class.make_endpoint(endpoint:, region:)
       @channel = Common::Net.new_channel(endpoint:)
-      @token_provider = token_provider
+      # Make sure to use the correct endpoint for the default token provider
+      @token_provider = token_provider || Common::Auth::AuthTokenProvider.new(endpoint:)
 
-      auth_interceptor = Common::Auth::Interceptor.new(token_provider:)
-      error_interceptor = Common::ErrorInterceptor.new
+      interceptors = [Common::ErrorInterceptor.new]
+      interceptors << Common::Auth::Interceptor.new(token_provider:) unless no_auth
 
-      @stub = Stately::Db::DatabaseService::Stub.new(nil, nil, channel_override: @channel,
-                                                               interceptors: [error_interceptor, auth_interceptor])
+      @stub = Stately::Db::DatabaseService::Stub.new(nil, nil,
+                                                     channel_override: @channel, interceptors:)
       @store_id = store_id.to_i
       @schema = schema
       @allow_stale = false

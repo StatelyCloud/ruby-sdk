@@ -16,6 +16,9 @@ describe StatelyDB::KeyPath do
     path = described_class.with("foo", "1234")
     expect(path.to_s).to eq("/foo-1234")
 
+    path = described_class.with("foo", "1234/abc")
+    expect(path.to_s).to eq("/foo-1234%/abc")
+
     stately_uuid = StatelyDB::UUID.parse(test_uuid)
     path = described_class.with("foo", stately_uuid)
     expect(path.to_s).to eq("/foo-9KiiShKdQR-R0m0Z0Oqglg")
@@ -43,6 +46,7 @@ describe StatelyDB::KeyPath do
 
   it "can make a key_id from a String" do
     expect(described_class.to_key_id("batman")).to eq("batman")
+    expect(described_class.to_key_id("batman/123")).to eq("batman%/123")
   end
 
   it "can make a key_id from a binary-encoded String" do
