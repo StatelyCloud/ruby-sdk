@@ -956,6 +956,9 @@ module Stately
     ListPartialResult: untyped
     ListFinished: untyped
     SortDirection: untyped
+    FilterCondition: untyped
+    BeginScanRequest: untyped
+    SegmentationParams: untyped
     DeleteRequest: untyped
     DeleteItem: untyped
     DeleteResult: untyped
@@ -981,6 +984,7 @@ module Stately
     TransactionFinished: untyped
     ContinueListRequest: untyped
     ContinueListDirection: untyped
+    ContinueScanRequest: untyped
     SortableProperty: untyped
     ScanRootPathsRequest: untyped
     ScanRootPathsResponse: untyped
@@ -1023,6 +1027,7 @@ module StatelyCode
   CACHED_SCHEMA_TOO_OLD: untyped
   CONCURRENT_MODIFICATION: untyped
   CONDITIONAL_CHECK_FAILED: untyped
+  ITEM_REUSED_WITH_DIFFERENT_KEY_PATH: untyped
   NON_RECOVERABLE_TRANSACTION: untyped
   STORE_IN_USE: untyped
   STORE_REQUEST_LIMIT_EXCEEDED: untyped

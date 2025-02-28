@@ -62,6 +62,24 @@ module Stately
         # ContinueList with its token should also be allowed.
         # buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
         rpc :ContinueList, ::Stately::Db::ContinueListRequest, stream(::Stately::Db::ListResponse)
+        # BeginScan initiates a scan request which will scan over the entire store
+        # and apply the provided filters. This API returns a token that you can pass
+        # to ContinueScan to paginate through the result set. This can fail if the
+        # caller does not have permission to read Items.
+        # WARNING: THIS API CAN BE EXTREMELY EXPENSIVE FOR STORES WITH A LARGE NUMBER
+        # OF ITEMS.
+        # buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
+        rpc :BeginScan, ::Stately::Db::BeginScanRequest, stream(::Stately::Db::ListResponse)
+        # ContinueScan takes the token from a BeginScan call and returns more results
+        # based on the original request parameters and pagination options. It has
+        # very few options of its own because it is a continuation of a previous list
+        # operation. It will return a new token which can be used for another
+        # ContinueScan call, and so on. Calls to ContinueScan are tied to the
+        # authorization of the original BeginScan call, so if the original BeginScan
+        # call was allowed, ContinueScan with its token should also be allowed.
+        # WARNING: THIS API CAN BE EXTREMELY EXPENSIVE FOR STORES WITH A LARGE NUMBER OF ITEMS.
+        # buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
+        rpc :ContinueScan, ::Stately::Db::ContinueScanRequest, stream(::Stately::Db::ListResponse)
         # SyncList returns all changes to Items within the result set of a previous
         # List operation. For all Items within the result set that were modified, it
         # returns the full Item at in its current state. It also returns a list of
