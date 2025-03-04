@@ -41,12 +41,9 @@ module StatelyDB
           raw_detail = status.details[0]
           if raw_detail.type_url == "type.googleapis.com/stately.errors.StatelyErrorDetails"
             error_details = Stately::Errors::StatelyErrorDetails.decode(raw_detail.value)
-            message = error_details.message
-            rid = error.metadata["st-rid"]
-            message = "#{message} (Request ID: #{rid})" unless rid.nil?
             upstream_cause = error_details.upstream_cause.empty? ? nil : StandardError.new(error_details.upstream_cause) # rubocop:disable Metrics/BlockNesting
-            return new(message, code: error.code, stately_code: error_details.stately_code,
-                                cause: upstream_cause)
+            return new(error_details.message, code: error.code, stately_code: error_details.stately_code,
+                                              cause: upstream_cause)
           end
         end
       end
