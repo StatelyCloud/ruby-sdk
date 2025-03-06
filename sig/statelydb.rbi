@@ -210,13 +210,13 @@ module StatelyDB
       params(
         store_id: Integer,
         schema: Module,
-        token_provider: Common::Auth::TokenProvider,
+        token_provider: T.nilable(Common::Auth::TokenProvider),
         endpoint: T.nilable(String),
         region: T.nilable(String),
         no_auth: T::Boolean
       ).void
     end
-    def initialize(store_id:, schema:, token_provider: Common::Auth::AuthTokenProvider.new, endpoint: nil, region: nil, no_auth: false); end
+    def initialize(store_id:, schema:, token_provider: nil, endpoint: nil, region: nil, no_auth: false); end
 
     # _@return_ — nil
     sig { void }

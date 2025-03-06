@@ -32,7 +32,7 @@ module StatelyDB
     #     an auth token. This is used when talking to the Stately BYOC Data Plane on localhost.
     def initialize(store_id:,
                    schema:,
-                   token_provider: Common::Auth::AuthTokenProvider.new,
+                   token_provider: nil,
                    endpoint: nil,
                    region: nil,
                    no_auth: false)
@@ -53,7 +53,7 @@ module StatelyDB
       @token_provider = token_provider || Common::Auth::AuthTokenProvider.new(endpoint:)
 
       interceptors = [Common::ErrorInterceptor.new]
-      interceptors << Common::Auth::Interceptor.new(token_provider:) unless no_auth
+      interceptors << Common::Auth::Interceptor.new(token_provider: @token_provider) unless no_auth
 
       @stub = Stately::Db::DatabaseService::Stub.new(nil, nil,
                                                      channel_override: @channel, interceptors:)

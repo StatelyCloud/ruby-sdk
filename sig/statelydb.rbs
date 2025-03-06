@@ -175,7 +175,7 @@ module StatelyDB
     def initialize: (
                       store_id: Integer,
                       schema: Module,
-                      ?token_provider: Common::Auth::TokenProvider,
+                      ?token_provider: Common::Auth::TokenProvider?,
                       ?endpoint: String?,
                       ?region: String?,
                       ?no_auth: bool
