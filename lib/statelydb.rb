@@ -331,7 +331,7 @@ module StatelyDB
     def process_list_response(resp)
       items = []
       token = nil
-      resp.each do |r|
+      safe_yield_stream(resp) do |r|
         case r.response
         when :result
           r.result.items.map do |result|
@@ -360,7 +360,7 @@ module StatelyDB
       updated_outside_list_window_paths = []
       token = nil
       is_reset = false
-      resp.each do |r|
+      safe_yield_stream(resp) do |r|
         case r.response
         when :result
           r.result.changed_items.each do |item|

@@ -651,37 +651,6 @@ module StatelyDB
 
     # GRPC interceptor to convert errors to StatelyDB::Error
     class ErrorInterceptor < GRPC::ClientInterceptor
-      # client unary interceptor
-      def request_response: (
-                              request: untyped,
-                              call: untyped,
-                              method: untyped,
-                              metadata: untyped
-                            ) -> untyped
-
-      # client streaming interceptor
-      def client_streamer: (
-                             requests: untyped,
-                             call: untyped,
-                             method: untyped,
-                             metadata: untyped
-                           ) -> untyped
-
-      # server streaming interceptor
-      def server_streamer: (
-                             request: untyped,
-                             call: untyped,
-                             method: untyped,
-                             metadata: untyped
-                           ) -> untyped
-
-      # bidirectional streaming interceptor
-      def bidi_streamer: (
-                           requests: untyped,
-                           call: untyped,
-                           method: untyped,
-                           metadata: untyped
-                         ) -> untyped
     end
   end
 
