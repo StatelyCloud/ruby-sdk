@@ -20,7 +20,7 @@ module StatelyDB
         # gRPC client unary interceptor
         #
         # @param [Object] request The request object
-        # @param [GRPC::ActiveCall] call The active call object
+        # @param [::GRPC::ActiveCall] call The active call object
         # @param [Symbol] method The method being called
         # @param [Hash] metadata The metadata hash
         # @return [Object] The response object
@@ -33,7 +33,7 @@ module StatelyDB
         # gRPC client streaming interceptor
         #
         # @param [Enumerable] requests The list of requests
-        # @param [GRPC::ActiveCall] call The active call object
+        # @param [::GRPC::ActiveCall] call The active call object
         # @param [Symbol] method The method being called
         # @param [Hash] metadata The metadata hash
         # @return [Enumerator] The response enumerator
@@ -46,7 +46,7 @@ module StatelyDB
         # gRPC  server streaming interceptor
         #
         # @param [Object] request The request object
-        # @param [GRPC::ActiveCall] call The active call object
+        # @param [::GRPC::ActiveCall] call The active call object
         # @param [Symbol] method The method being called
         # @param [Hash] metadata The metadata hash
         # @return [Enumerator] The response enumerator
@@ -59,7 +59,7 @@ module StatelyDB
         # gRPC bidirectional streaming interceptor
         #
         # @param [Enumerable] requests The list of requests
-        # @param [GRPC::ActiveCall] call The active call object
+        # @param [::GRPC::ActiveCall] call The active call object
         # @param [Symbol] method The method being called
         # @param [Hash] metadata The metadata hash
         # @return [Enumerator] The response enumerator

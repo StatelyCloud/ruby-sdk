@@ -369,7 +369,7 @@ module StatelyDB
     # then the default endpoint will be returned.
     #
     # @param endpoint [String] the endpoint to connect to
-    # @param region [Region] the region to connect to
+    # @param region [String] the region to connect to
     # @return [String] the constructed endpoint
     def self.make_endpoint(endpoint: nil, region: nil)
       return endpoint unless endpoint.nil?
@@ -384,7 +384,7 @@ module StatelyDB
 
     # Process a list response from begin_list or continue_list
     #
-    # @param resp [Stately::Db::ListResponse] the response to process
+    # @param resp [::Stately::Db::ListResponse] the response to process
     # @return [(Array<StatelyDB::Item>, StatelyDB::Token)] the list of Items and the token
     # @api private
     # @!visibility private
@@ -410,7 +410,7 @@ module StatelyDB
 
     # Process a sync response from sync_list
     #
-    # @param resp [Stately::Db::SyncResponse] the response to process
+    # @param resp [::Stately::Db::SyncResponse] the response to process
     # @return [StatelyDB::SyncResult] the result of the sync operation
     # @api private
     # @!visibility private

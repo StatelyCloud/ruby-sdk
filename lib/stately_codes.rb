@@ -6,6 +6,7 @@ module StatelyCode
   #
   # - Retryable
   #     This error is immediately retryable.
+  # @return [String]
   CACHED_SCHEMA_TOO_OLD = "CachedSchemaTooOld"
 
   # ConcurrentModification indicates the current transaction was aborted
@@ -34,6 +35,7 @@ module StatelyCode
   #
   # - Retryable
   #     This error is immediately retryable.
+  # @return [String]
   CONCURRENT_MODIFICATION = "ConcurrentModification"
 
   # ConditionalCheckFailed indicates that conditions provided to perform an
@@ -45,6 +47,7 @@ module StatelyCode
   # - Not Retryable
   #     Typically a conditional check failure is not retryable
   #     unless the conditions for the operation are changed.
+  # @return [String]
   CONDITIONAL_CHECK_FAILED = "ConditionalCheckFailed"
 
   # ItemReusedWithDifferentKeyPath occurs when a client reads an Item, then
@@ -57,6 +60,7 @@ module StatelyCode
   # new instance of the Item rather than reusing the read result.
   #
   # - Not Retryable
+  # @return [String]
   ITEM_REUSED_WITH_DIFFERENT_KEY_PATH = "ItemReusedWithDifferentKeyPath"
 
   # NonRecoverableTransaction indicates that conditions required for the
@@ -68,6 +72,7 @@ module StatelyCode
   # independent records with aliases pointing to the same item.
   #
   # - Not Retryable
+  # @return [String]
   NON_RECOVERABLE_TRANSACTION = "NonRecoverableTransaction"
 
   # StoreInUse indicates that the underlying Store is currently in being
@@ -76,6 +81,7 @@ module StatelyCode
   #
   # - Retryable
   #     This can be retried with backoff.
+  # @return [String]
   STORE_IN_USE = "StoreInUse"
 
   # StoreRequestLimitExceeded indicates that an attempt to modify a Store has
@@ -85,6 +91,7 @@ module StatelyCode
   # please contact support.
   #
   # - Retryable
+  # @return [String]
   STORE_REQUEST_LIMIT_EXCEEDED = "StoreRequestLimitExceeded"
 
   # StoreThroughputExceeded indicates that the underlying Store does not have
@@ -94,5 +101,6 @@ module StatelyCode
   #
   # - Retryable
   #     With an exponential backoff.
+  # @return [String]
   STORE_THROUGHPUT_EXCEEDED = "StoreThroughputExceeded"
 end

@@ -10,6 +10,11 @@ module StatelyDB
     # A module for Stately Cloud auth code
     module Auth
       # Result from a token fetch operation
+      #
+      # @!attribute [r] token
+      #   @return [String] The token string.
+      # @!attribute [r] expires_in_secs
+      #   @return [Integer] The expiration time in seconds.
       class TokenResult
         attr_reader :token, :expires_in_secs
 
@@ -32,6 +37,7 @@ module StatelyDB
         end
 
         # Close the token provider and kill any background operations
+        # @return [void]
         def close
           raise "Not Implemented"
         end
@@ -39,6 +45,9 @@ module StatelyDB
 
       # StatelyAccessTokenFetcher is a TokenFetcher that fetches tokens from the StatelyDB API
       class StatelyAccessTokenFetcher < TokenFetcher
+        # Non-retryable errors that will not be retried.
+        #
+        # @return [Array<::GRPC::Core::StatusCodes>]
         NON_RETRYABLE_ERRORS = [
           GRPC::Core::StatusCodes::UNAUTHENTICATED,
           GRPC::Core::StatusCodes::PERMISSION_DENIED,
@@ -46,6 +55,10 @@ module StatelyDB
           GRPC::Core::StatusCodes::UNIMPLEMENTED,
           GRPC::Core::StatusCodes::INVALID_ARGUMENT
         ].freeze
+
+        # Number of retry attempts for requests.
+        #
+        # @return [Integer]
         RETRY_ATTEMPTS = 10
 
         # @param [String] endpoint The endpoint of the OAuth server
@@ -76,6 +89,8 @@ module StatelyDB
           end
         end
 
+        # Close the token provider and kill any background operations
+        # @return [void]
         def close
           @channel&.close
         end

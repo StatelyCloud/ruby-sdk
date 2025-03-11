@@ -41,6 +41,7 @@ module StatelyDB
 
         # Close the token provider and kill any background operations
         # This just invokes the close method on the actor which should do the cleanup
+        # @return [void]
         def close
           @actor.close
         end
@@ -81,6 +82,7 @@ module StatelyDB
 
           # Initialize the actor. This runs on the actor thread which means
           # we can dispatch async operations here.
+          # @return [void]
           def init
             # disable the async lib logger. We do our own error handling and propagation
             Console.logger.disable(Async::Task)
@@ -88,6 +90,7 @@ module StatelyDB
           end
 
           # Close the token provider and kill any background operations
+          # @return [void]
           def close
             @scheduled&.stop
             @token_fetcher&.close
@@ -117,7 +120,7 @@ module StatelyDB
           end
 
           # Refresh the access token
-          # @return [Task] A task that will resolve to the new access token
+          # @return [::Async::Task] A task that will resolve to the new access token
           def refresh_token
             Async do
               # we use an Async::Condition to dedupe multiple requests here
@@ -187,6 +190,11 @@ module StatelyDB
         end
 
         # Persistent state for the token provider
+        #
+        # @!attribute [r] token
+        #   @return [String] The token string.
+        # @!attribute [r] expires_at_unix_secs
+        #   @return [Integer] The expiration time in unix seconds.
         class TokenState
           attr_reader :token, :expires_at_unix_secs
 

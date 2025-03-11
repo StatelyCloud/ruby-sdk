@@ -380,21 +380,21 @@ module StatelyDB
     # _@param_ `region` — the region to connect to
     # 
     # _@return_ — the constructed endpoint
-    def self.make_endpoint: (?endpoint: String?, ?region: Region?) -> String
+    def self.make_endpoint: (?endpoint: String?, ?region: String?) -> String
 
     # Process a list response from begin_list or continue_list
     # 
     # _@param_ `resp` — the response to process
     # 
     # _@return_ — the list of Items and the token
-    def process_list_response: (Stately::Db::ListResponse resp) -> [::Array[StatelyDB::Item], StatelyDB::Token]
+    def process_list_response: (::Stately::Db::ListResponse resp) -> [::Array[StatelyDB::Item], StatelyDB::Token]
 
     # Process a sync response from sync_list
     # 
     # _@param_ `resp` — the response to process
     # 
     # _@return_ — the result of the sync operation
-    def process_sync_response: (Stately::Db::SyncResponse resp) -> StatelyDB::SyncResult
+    def process_sync_response: (::Stately::Db::SyncResponse resp) -> StatelyDB::SyncResult
   end
 
   # SyncResult represents the results of a sync operation.
@@ -456,7 +456,7 @@ module StatelyDB
       # _@param_ `endpoint` — The endpoint to connect to
       # 
       # _@return_ — The new channel
-      def self.new_channel: (endpoint: String) -> GRPC::Core::Channel
+      def self.new_channel: (endpoint: String) -> ::GRPC::Core::Channel
     end
 
     # A module for Stately Cloud auth code
@@ -479,7 +479,7 @@ module StatelyDB
         # _@return_ — The response object
         def request_response: (
                                 request: Object,
-                                call: GRPC::ActiveCall,
+                                call: ::GRPC::ActiveCall,
                                 method: Symbol,
                                 metadata: ::Hash[untyped, untyped]
                               ) -> Object
@@ -497,7 +497,7 @@ module StatelyDB
         # _@return_ — The response enumerator
         def client_streamer: (
                                requests: ::Enumerable[untyped],
-                               call: GRPC::ActiveCall,
+                               call: ::GRPC::ActiveCall,
                                method: Symbol,
                                metadata: ::Hash[untyped, untyped]
                              ) -> ::Enumerator[untyped]
@@ -515,7 +515,7 @@ module StatelyDB
         # _@return_ — The response enumerator
         def server_streamer: (
                                request: Object,
-                               call: GRPC::ActiveCall,
+                               call: ::GRPC::ActiveCall,
                                method: Symbol,
                                metadata: ::Hash[untyped, untyped]
                              ) -> ::Enumerator[untyped]
@@ -533,7 +533,7 @@ module StatelyDB
         # _@return_ — The response enumerator
         def bidi_streamer: (
                              requests: ::Enumerable[untyped],
-                             call: GRPC::ActiveCall,
+                             call: ::GRPC::ActiveCall,
                              method: Symbol,
                              metadata: ::Hash[untyped, untyped]
                            ) -> ::Enumerator[untyped]
@@ -545,6 +545,11 @@ module StatelyDB
       end
 
       # Result from a token fetch operation
+      # 
+      # @!attribute [r] token
+      #   @return [String] The token string.
+      # @!attribute [r] expires_in_secs
+      #   @return [Integer] The expiration time in seconds.
       class TokenResult
         # Create a new TokenResult
         # 
@@ -553,11 +558,11 @@ module StatelyDB
         # _@param_ `expires_in_secs` — The number of seconds until the token expires
         def initialize: (token: String, expires_in_secs: Integer) -> void
 
-        # Returns the value of attribute token.
-        attr_reader token: untyped
+        # _@return_ — The token string.
+        attr_reader token: String
 
-        # Returns the value of attribute expires_in_secs.
-        attr_reader expires_in_secs: untyped
+        # _@return_ — The expiration time in seconds.
+        attr_reader expires_in_secs: Integer
       end
 
       # TokenFetcher is an abstract base class that should be extended
@@ -569,13 +574,13 @@ module StatelyDB
         def fetch: () -> TokenResult
 
         # Close the token provider and kill any background operations
-        def close: () -> untyped
+        def close: () -> void
       end
 
       # StatelyAccessTokenFetcher is a TokenFetcher that fetches tokens from the StatelyDB API
       class StatelyAccessTokenFetcher < StatelyDB::Common::Auth::TokenFetcher
-        NON_RETRYABLE_ERRORS: untyped
-        RETRY_ATTEMPTS: untyped
+        NON_RETRYABLE_ERRORS: ::Array[::GRPC::Core::StatusCodes]
+        RETRY_ATTEMPTS: Integer
 
         # _@param_ `endpoint` — The endpoint of the OAuth server
         # 
@@ -589,7 +594,8 @@ module StatelyDB
         # _@return_ — The fetched TokenResult
         def fetch: () -> TokenResult
 
-        def close: () -> untyped
+        # Close the token provider and kill any background operations
+        def close: () -> void
 
         # Check if an error is retryable
         # 
@@ -610,7 +616,7 @@ module StatelyDB
         def get_token: (?force: bool) -> String
 
         # Close the token provider and kill any background operations
-        def close: () -> untyped
+        def close: () -> void
       end
 
       # AuthTokenProvider is an implementation of the TokenProvider abstract base class
@@ -627,7 +633,7 @@ module StatelyDB
 
         # Close the token provider and kill any background operations
         # This just invokes the close method on the actor which should do the cleanup
-        def close: () -> untyped
+        def close: () -> void
 
         # Get the current access token
         # 
@@ -646,10 +652,10 @@ module StatelyDB
 
           # Initialize the actor. This runs on the actor thread which means
           # we can dispatch async operations here.
-          def init: () -> untyped
+          def init: () -> void
 
           # Close the token provider and kill any background operations
-          def close: () -> untyped
+          def close: () -> void
 
           # Get the current access token
           # 
@@ -666,7 +672,7 @@ module StatelyDB
           # Refresh the access token
           # 
           # _@return_ — A task that will resolve to the new access token
-          def refresh_token: () -> Task
+          def refresh_token: () -> ::Async::Task
 
           # Refresh the access token implementation
           # 
@@ -675,6 +681,11 @@ module StatelyDB
         end
 
         # Persistent state for the token provider
+        # 
+        # @!attribute [r] token
+        #   @return [String] The token string.
+        # @!attribute [r] expires_at_unix_secs
+        #   @return [Integer] The expiration time in unix seconds.
         class TokenState
           # Create a new TokenState
           # 
@@ -683,11 +694,11 @@ module StatelyDB
           # _@param_ `expires_at_unix_secs` — The unix timestamp when the token expires
           def initialize: (token: String, expires_at_unix_secs: Integer) -> void
 
-          # Returns the value of attribute token.
-          attr_reader token: untyped
+          # _@return_ — The token string.
+          attr_reader token: String
 
-          # Returns the value of attribute expires_at_unix_secs.
-          attr_reader expires_at_unix_secs: untyped
+          # _@return_ — The expiration time in unix seconds.
+          attr_reader expires_at_unix_secs: Integer
         end
       end
     end
@@ -737,21 +748,21 @@ module StatelyDB
       # _@param_ `store_id` — the StatelyDB Store to transact against
       # 
       # _@param_ `schema` — the schema to use for marshalling and unmarshalling Items
-      def initialize: (stub: Stately::Db::DatabaseService::Stub, store_id: Integer, schema: StatelyDB::Schema) -> void
+      def initialize: (stub: ::Stately::Db::DatabaseService::Stub, store_id: Integer, schema: ::StatelyDB::Schema) -> void
 
       # Send a request and wait for a response
       # 
       # _@param_ `req` — the request to send
       # 
       # _@return_ — the response
-      def request_response: (Stately::Db::TransactionRequest req) -> Stately::Db::TransactionResponse
+      def request_response: (::Stately::Db::TransactionRequest req) -> ::Stately::Db::TransactionResponse
 
       # Send a request and don't wait for a response
       # 
       # _@param_ `req` — the request to send
       # 
       # _@return_ — nil
-      def request_only: (Stately::Db::TransactionRequest req) -> void
+      def request_only: (::Stately::Db::TransactionRequest req) -> void
 
       # Send a request and process all responses, until we receive a finished message. This is used for list operations.
       # Each response is processed by the block passed to this method, and the response for this method is a token.
@@ -766,7 +777,7 @@ module StatelyDB
       #     puts result.item.key_path
       #   end
       # ```
-      def request_list_responses: (Stately::Db::TransactionRequest req) ?{ (Stately::Db::TransactionListResponse resp) -> void } -> Stately::Db::ListToken
+      def request_list_responses: (::Stately::Db::TransactionRequest req) ?{ (::Stately::Db::TransactionListResponse resp) -> void } -> ::Stately::Db::ListToken
 
       # Begin a transaction. Begin is called implicitly when the block passed to transaction is called.
       # 
@@ -777,7 +788,7 @@ module StatelyDB
       def commit: () -> StatelyDB::Transaction::Transaction::Result
 
       # Abort a transaction. Abort is called implicitly if an exception is raised within the block passed to transaction.
-      def abort: () -> Stately::Db::TransactionResponse
+      def abort: () -> ::Stately::Db::TransactionResponse
 
       # Check if a transaction is open. A transaction is open if begin has been called and commit or abort has not been called.
       # 
@@ -892,7 +903,7 @@ module StatelyDB
                         ?limit: Integer,
                         ?sort_property: String?,
                         ?sort_direction: Symbol
-                      ) -> [::Array[StatelyDB::Item], Stately::Db::ListToken]
+                      ) -> [::Array[StatelyDB::Item], ::Stately::Db::ListToken]
 
       # Continue listing Items from a StatelyDB Store using a token.
       # 
@@ -907,14 +918,14 @@ module StatelyDB
       # _@param_ `continue_direction` — the direction to continue by (:forward or :backward)
       # 
       # _@return_ — the list of Items and the token
-      def continue_list: (Stately::Db::ListToken token, ?continue_direction: Symbol) -> [::Array[StatelyDB::Item], Stately::Db::ListToken]
+      def continue_list: (::Stately::Db::ListToken token, ?continue_direction: Symbol) -> [::Array[StatelyDB::Item], ::Stately::Db::ListToken]
 
       # Processes a list response from begin_list or continue_list
       # 
       # _@param_ `req` — the request to send
       # 
       # _@return_ — the list of Items and the token
-      def do_list_request_response: (Stately::Db::TransactionRequest req) -> [::Array[StatelyDB::Item], Stately::Db::ListToken]
+      def do_list_request_response: (::Stately::Db::TransactionRequest req) -> [::Array[StatelyDB::Item], ::Stately::Db::ListToken]
 
       # We are using a oneof inside the TransactionRequest to determine the type of request. The ruby
       # generated code does not have a helper for the internal request type so we need to infer it.
@@ -922,7 +933,7 @@ module StatelyDB
       # _@param_ `req` — the request
       # 
       # _@return_ — the response type
-      def infer_response_type_from_request: (Stately::Db::TransactionRequest req) -> Class
+      def infer_response_type_from_request: (::Stately::Db::TransactionRequest req) -> Class
 
       # We are using a oneof inside the TransactionResponse to determine the type of response. The ruby
       # generated code does not have a helper for the internal response type so we need to infer it.
@@ -930,7 +941,7 @@ module StatelyDB
       # _@param_ `resp` — the response
       # 
       # _@return_ — the response type
-      def infer_response_type_from_response: (Stately::Db::TransactionResponse resp) -> Class
+      def infer_response_type_from_response: (::Stately::Db::TransactionResponse resp) -> Class
 
       # Result represents the results of a transaction
       # 
@@ -1036,12 +1047,12 @@ module Stately
 end
 
 module StatelyCode
-  CACHED_SCHEMA_TOO_OLD: untyped
-  CONCURRENT_MODIFICATION: untyped
-  CONDITIONAL_CHECK_FAILED: untyped
-  ITEM_REUSED_WITH_DIFFERENT_KEY_PATH: untyped
-  NON_RECOVERABLE_TRANSACTION: untyped
-  STORE_IN_USE: untyped
-  STORE_REQUEST_LIMIT_EXCEEDED: untyped
-  STORE_THROUGHPUT_EXCEEDED: untyped
+  CACHED_SCHEMA_TOO_OLD: String
+  CONCURRENT_MODIFICATION: String
+  CONDITIONAL_CHECK_FAILED: String
+  ITEM_REUSED_WITH_DIFFERENT_KEY_PATH: String
+  NON_RECOVERABLE_TRANSACTION: String
+  STORE_IN_USE: String
+  STORE_REQUEST_LIMIT_EXCEEDED: String
+  STORE_THROUGHPUT_EXCEEDED: String
 end

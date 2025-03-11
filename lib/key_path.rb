@@ -9,8 +9,8 @@ module StatelyDB
     end
 
     # Appends a new path segment.
-    # @param [String] namespace
-    # @param [String, StatelyDB::UUID, #to_s] identifier
+    # @param namespace [String]
+    # @param identifier [String, StatelyDB::UUID, #to_s]
     # @return [KeyPath]
     def with(namespace, identifier = nil)
       if identifier.nil?
@@ -37,8 +37,8 @@ module StatelyDB
     end
 
     # Appends a new path segment.
-    # @param [String] namespace
-    # @param [String, StatelyDB::UUID, #to_s] identifier
+    # @param namespace [String]
+    # @param identifier [String, StatelyDB::UUID, #to_s]
     # @return [KeyPath]
     #
     # @example
@@ -49,7 +49,7 @@ module StatelyDB
 
     # If the value is a binary string, encode it as a url-safe base64 string with padding removed.
     #
-    # @param [String, StatelyDB::UUID, #to_s] value The value to convert to a key id.
+    # @param value [String, StatelyDB::UUID, #to_s] The value to convert to a key id.
     # @return [String]
     def self.to_key_id(value)
       if value.is_a?(StatelyDB::UUID)

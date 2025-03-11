@@ -9,7 +9,7 @@ module StatelyDB
     module Net
       # Create a new gRPC channel
       # @param [String] endpoint The endpoint to connect to
-      # @return [GRPC::Core::Channel] The new channel
+      # @return [::GRPC::Core::Channel] The new channel
       def self.new_channel(endpoint:)
         endpoint_uri = URI(endpoint)
         creds = GRPC::Core::ChannelCredentials.new

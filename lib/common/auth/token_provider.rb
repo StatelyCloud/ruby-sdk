@@ -15,6 +15,7 @@ module StatelyDB
         end
 
         # Close the token provider and kill any background operations
+        # @return [void]
         def close
           raise "Not Implemented"
         end

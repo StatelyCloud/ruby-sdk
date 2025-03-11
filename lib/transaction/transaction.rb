@@ -42,9 +42,9 @@ module StatelyDB
 
       # Initialize a new Transaction
       #
-      # @param stub [Stately::Db::DatabaseService::Stub] a StatelyDB gRPC stub
+      # @param stub [::Stately::Db::DatabaseService::Stub] a StatelyDB gRPC stub
       # @param store_id [Integer] the StatelyDB Store to transact against
-      # @param schema [StatelyDB::Schema] the schema to use for marshalling and unmarshalling Items
+      # @param schema [::StatelyDB::Schema] the schema to use for marshalling and unmarshalling Items
       def initialize(stub:, store_id:, schema:)
         @stub = stub
         @store_id = store_id
@@ -57,8 +57,8 @@ module StatelyDB
 
       # Send a request and wait for a response
       #
-      # @param req [Stately::Db::TransactionRequest] the request to send
-      # @return [Stately::Db::TransactionResponse] the response
+      # @param req [::Stately::Db::TransactionRequest] the request to send
+      # @return [::Stately::Db::TransactionResponse] the response
       # @api private
       # @!visibility private
       def request_response(req)
@@ -78,7 +78,7 @@ module StatelyDB
 
       # Send a request and don't wait for a response
       #
-      # @param req [Stately::Db::TransactionRequest] the request to send
+      # @param req [::Stately::Db::TransactionRequest] the request to send
       # @return [void] nil
       # @api private
       # @!visibility private
@@ -91,9 +91,9 @@ module StatelyDB
       # Send a request and process all responses, until we receive a finished message. This is used for list operations.
       # Each response is processed by the block passed to this method, and the response for this method is a token.
       #
-      # @param req [Stately::Db::TransactionRequest] the request to send
-      # @yieldparam resp [Stately::Db::TransactionListResponse] the response
-      # @return [Stately::Db::ListToken] the token
+      # @param req [::Stately::Db::TransactionRequest] the request to send
+      # @yieldparam resp [::Stately::Db::TransactionListResponse] the response
+      # @return [::Stately::Db::ListToken] the token
       # @example
       #   request_list_responses(req) do |resp|
       #     resp.result.items.each do |result|
@@ -153,7 +153,7 @@ module StatelyDB
       end
 
       # Abort a transaction. Abort is called implicitly if an exception is raised within the block passed to transaction.
-      # @return [Stately::Db::TransactionResponse]
+      # @return [::Stately::Db::TransactionResponse]
       # @api private
       # @!visibility private
       def abort
@@ -333,7 +333,7 @@ module StatelyDB
       # @param limit [Integer] the maximum number of items to return
       # @param sort_property [String] the property to sort by
       # @param sort_direction [Symbol] the direction to sort by (:ascending or :descending)
-      # @return [(Array<StatelyDB::Item>, Stately::Db::ListToken)] the list of Items and the token
+      # @return [(Array<StatelyDB::Item>, ::Stately::Db::ListToken)] the list of Items and the token
       #
       # Example:
       #   client.data.transaction do |txn|
@@ -363,9 +363,9 @@ module StatelyDB
 
       # Continue listing Items from a StatelyDB Store using a token.
       #
-      # @param token [Stately::Db::ListToken] the token to continue from
+      # @param token [::Stately::Db::ListToken] the token to continue from
       # @param continue_direction [Symbol] the direction to continue by (:forward or :backward)
-      # @return [(Array<StatelyDB::Item>, Stately::Db::ListToken)] the list of Items and the token
+      # @return [(Array<StatelyDB::Item>, ::Stately::Db::ListToken)] the list of Items and the token
       #
       # Example:
       #   client.data.transaction do |txn|
@@ -388,8 +388,8 @@ module StatelyDB
 
       # Processes a list response from begin_list or continue_list
       #
-      # @param req [Stately::Db::TransactionRequest] the request to send
-      # @return [(Array<StatelyDB::Item>, Stately::Db::ListToken)] the list of Items and the token
+      # @param req [::Stately::Db::TransactionRequest] the request to send
+      # @return [(Array<StatelyDB::Item>, ::Stately::Db::ListToken)] the list of Items and the token
       # @api private
       # @!visibility private
       def do_list_request_response(req)
@@ -405,7 +405,7 @@ module StatelyDB
       # We are using a oneof inside the TransactionRequest to determine the type of request. The ruby
       # generated code does not have a helper for the internal request type so we need to infer it.
       #
-      # @param req [Stately::Db::TransactionRequest] the request
+      # @param req [::Stately::Db::TransactionRequest] the request
       # @return [Class] the response type
       # @api private
       # @!visibility private
@@ -422,7 +422,7 @@ module StatelyDB
       # We are using a oneof inside the TransactionResponse to determine the type of response. The ruby
       # generated code does not have a helper for the internal response type so we need to infer it.
       #
-      # @param resp [Stately::Db::TransactionResponse] the response
+      # @param resp [::Stately::Db::TransactionResponse] the response
       # @return [Class] the response type
       # @api private
       # @!visibility private
