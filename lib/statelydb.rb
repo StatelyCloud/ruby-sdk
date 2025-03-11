@@ -165,6 +165,66 @@ module StatelyDB
       process_list_response(resp)
     end
 
+    # Initiates a scan request which will scan over the entire store and apply
+    # the provided filters. This API returns a token that you can pass to
+    # continue_scan to paginate through the result set. This can fail if the
+    # caller does not have permission to read Items.
+    #
+    # WARNING: THIS API CAN BE EXTREMELY EXPENSIVE FOR STORES WITH A LARGE NUMBER
+    # OF ITEMS.
+    #
+    # @param limit [Integer] the maximum number of items to return
+    # @param item_types [Array<Class, String>] the item types to filter by. The returned
+    #   items will be instances of one of these types.
+    # @param total_segments [Integer] the total number of segments to divide the
+    #   scan into. Use this when you want to parallelize your operation.
+    # @param segment_index [Integer] the index of the segment to scan.
+    #   Use this when you want to parallelize your operation.
+    # @return [Array<StatelyDB::Item>, StatelyDB::Token] the list of Items and the token
+    #
+    # @example
+    #   client.data.begin_scan(limit: 10, item_types: [MyItem])
+    def begin_scan(limit: 100,
+                   item_types: [],
+                   total_segments: nil,
+                   segment_index: nil)
+      if total_segments.nil? != segment_index.nil?
+        raise StatelyDB::Error.new("total_segments and segment_index must both be set or both be nil",
+                                   code: GRPC::Core::StatusCodes::INVALID_ARGUMENT,
+                                   stately_code: "InvalidArgument")
+      end
+      req = Stately::Db::BeginScanRequest.new(
+        store_id: @store_id,
+        limit:,
+        filter_condition: item_types.map do |item_type|
+          Stately::Db::FilterCondition.new(item_type: item_type.respond_to?(:name) ? item_type.name.split("::").last : item_type)
+        end,
+        schema_version_id: @schema::SCHEMA_VERSION_ID
+      )
+      resp = @stub.begin_scan(req)
+      process_list_response(resp)
+    end
+
+    # continue_scan takes the token from a begin_scan call and returns more results
+    # based on the original request parameters and pagination options.
+    #
+    # WARNING: THIS API CAN BE EXTREMELY EXPENSIVE FOR STORES WITH A LARGE NUMBER OF ITEMS.
+    #
+    # @param token [StatelyDB::Token] the token to continue from
+    # @return [Array<StatelyDB::Item>, StatelyDB::Token] the list of Items and the token
+    #
+    # @example
+    #  (items, token) = client.data.begin_scan(limit: 10, item_types: [MyItem])
+    #  client.data.continue_scan(token)
+    def continue_scan(token)
+      req = Stately::Db::ContinueScanRequest.new(
+        token_data: token.token_data,
+        schema_version_id: @schema::SCHEMA_VERSION_ID
+      )
+      resp = @stub.continue_scan(req)
+      process_list_response(resp)
+    end
+
     # Sync a list of Items from a StatelyDB Store.
     #
     # @param token [StatelyDB::Token] the token to sync from

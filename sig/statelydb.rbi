@@ -297,6 +297,53 @@ module StatelyDB
     sig { params(token: StatelyDB::Token).returns(T.any(T::Array[StatelyDB::Item], StatelyDB::Token)) }
     def continue_list(token); end
 
+    # Initiates a scan request which will scan over the entire store and apply
+    # the provided filters. This API returns a token that you can pass to
+    # continue_scan to paginate through the result set. This can fail if the
+    # caller does not have permission to read Items.
+    # 
+    # WARNING: THIS API CAN BE EXTREMELY EXPENSIVE FOR STORES WITH A LARGE NUMBER
+    # OF ITEMS.
+    # 
+    # _@param_ `limit` — the maximum number of items to return
+    # 
+    # _@param_ `item_types` — the item types to filter by. The returned items will be instances of one of these types.
+    # 
+    # _@param_ `total_segments` — the total number of segments to divide the scan into. Use this when you want to parallelize your operation.
+    # 
+    # _@param_ `segment_index` — the index of the segment to scan. Use this when you want to parallelize your operation.
+    # 
+    # _@return_ — the list of Items and the token
+    # 
+    # ```ruby
+    # client.data.begin_scan(limit: 10, item_types: [MyItem])
+    # ```
+    sig do
+      params(
+        limit: Integer,
+        item_types: T::Array[T.any(Class, String)],
+        total_segments: T.nilable(Integer),
+        segment_index: T.nilable(Integer)
+      ).returns(T.any(T::Array[StatelyDB::Item], StatelyDB::Token))
+    end
+    def begin_scan(limit: 100, item_types: [], total_segments: nil, segment_index: nil); end
+
+    # continue_scan takes the token from a begin_scan call and returns more results
+    # based on the original request parameters and pagination options.
+    # 
+    # WARNING: THIS API CAN BE EXTREMELY EXPENSIVE FOR STORES WITH A LARGE NUMBER OF ITEMS.
+    # 
+    # _@param_ `token` — the token to continue from
+    # 
+    # _@return_ — the list of Items and the token
+    # 
+    # ```ruby
+    # (items, token) = client.data.begin_scan(limit: 10, item_types: [MyItem])
+    # client.data.continue_scan(token)
+    # ```
+    sig { params(token: StatelyDB::Token).returns(T.any(T::Array[StatelyDB::Item], StatelyDB::Token)) }
+    def continue_scan(token); end
+
     # Sync a list of Items from a StatelyDB Store.
     # 
     # _@param_ `token` — the token to sync from
