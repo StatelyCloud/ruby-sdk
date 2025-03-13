@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-gem "grpc", "~> 1.63"
+gem "grpc", "~> 1.64.3"
 gem "grpc-tools", "1.71.0"
 gem "rake", "13.2.1"
 
