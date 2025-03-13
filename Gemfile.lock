@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    statelydb (0.20.1)
+    statelydb (0.20.2)
       async (= 2.21.1)
       async-actor (= 0.1.1)
       async-http (= 0.85.0)
@@ -163,8 +163,7 @@ GEM
     regexp_parser (2.9.3)
     reline (0.5.9)
       io-console (~> 0.5)
-    rexml (3.3.6)
-      strscan
+    rexml (3.4.1)
     rspec (3.13.0)
       rspec-core (~> 3.13.0)
       rspec-expectations (~> 3.13.0)
@@ -253,7 +252,7 @@ GEM
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unicode-display_width (2.5.0)
-    uri (1.0.2)
+    uri (1.0.3)
     warning (1.5.0)
     webmock (3.25.1)
       addressable (>= 2.8.0)
@@ -286,6 +285,7 @@ DEPENDENCIES
   grpc-tools (= 1.71.0)
   grpc_mock (= 0.4.6)
   rake (= 13.2.1)
+  rexml (>= 3.3.9)
   rspec (= 3.13.0)
   rubocop (= 1.73.2)
   rubocop-packaging (= 0.5.2)
@@ -299,6 +299,7 @@ DEPENDENCIES
   sord (~> 7.0)
   statelydb!
   steep (~> 1.7)
+  uri (~> 1.0, >= 1.0.3)
   warning (= 1.5.0)
   webmock (= 3.25.1)
   webrick (~> 1.8)
