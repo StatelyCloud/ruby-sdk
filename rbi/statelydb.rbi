@@ -305,7 +305,7 @@ module StatelyDB
     # WARNING: THIS API CAN BE EXTREMELY EXPENSIVE FOR STORES WITH A LARGE NUMBER
     # OF ITEMS.
     # 
-    # _@param_ `limit` — the maximum number of items to return
+    # _@param_ `limit` — the max number of items to retrieve. If set to 0 then the first page of results will be returned which may empty because it does not contain items of your selected item types. Be sure to check token.can_continue to see if there are more results to fetch.
     # 
     # _@param_ `item_types` — the item types to filter by. The returned items will be instances of one of these types.
     # 
@@ -326,7 +326,7 @@ module StatelyDB
         segment_index: T.nilable(Integer)
       ).returns(T.any(T::Array[StatelyDB::Item], StatelyDB::Token))
     end
-    def begin_scan(limit: 100, item_types: [], total_segments: nil, segment_index: nil); end
+    def begin_scan(limit: 0, item_types: [], total_segments: nil, segment_index: nil); end
 
     # continue_scan takes the token from a begin_scan call and returns more results
     # based on the original request parameters and pagination options.

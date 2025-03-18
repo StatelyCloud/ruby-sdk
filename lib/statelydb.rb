@@ -173,7 +173,10 @@ module StatelyDB
     # WARNING: THIS API CAN BE EXTREMELY EXPENSIVE FOR STORES WITH A LARGE NUMBER
     # OF ITEMS.
     #
-    # @param limit [Integer] the maximum number of items to return
+    # @param limit [Integer] the max number of items to retrieve. If set to 0
+    #   then the first page of results will be returned which may empty because it
+    #   does not contain items of your selected item types. Be sure to check
+    #   token.can_continue to see if there are more results to fetch.
     # @param item_types [Array<Class, String>] the item types to filter by. The returned
     #   items will be instances of one of these types.
     # @param total_segments [Integer] the total number of segments to divide the
@@ -184,7 +187,7 @@ module StatelyDB
     #
     # @example
     #   client.data.begin_scan(limit: 10, item_types: [MyItem])
-    def begin_scan(limit: 100,
+    def begin_scan(limit: 0,
                    item_types: [],
                    total_segments: nil,
                    segment_index: nil)
