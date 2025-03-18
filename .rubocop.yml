@@ -1,6 +1,12 @@
 require:
   - rubocop-rspec
   - rubocop-rake
+  # - rubocop-sorbet
+  # - rubocop-packaging
+  # - rubocop-performance
+  # - rubocop-shopify
+  # - rubocop-thread_safety
+  # - rubocop-yard
 
 AllCops:
   DisplayCopNames: true

@@ -158,7 +158,7 @@ module StatelyDB
     # _@param_ `namespace`
     # 
     # _@param_ `identifier`
-    sig { params(namespace: String, identifier: T.nilable(T.any(String, StatelyDB::UUID, T.untyped))).returns(KeyPath) }
+    sig { params(namespace: String, identifier: T.nilable(T.any(String, StatelyDB::UUID, T.untyped))).returns(StatelyDB::KeyPath) }
     def with(namespace, identifier = nil); end
 
     sig { returns(String) }
@@ -179,7 +179,7 @@ module StatelyDB
     # ```ruby
     # keypath = KeyPath.with("genres", "rock").with("artists", "the-beatles")
     # ```
-    sig { params(namespace: String, identifier: T.nilable(T.any(String, StatelyDB::UUID, T.untyped))).returns(KeyPath) }
+    sig { params(namespace: String, identifier: T.nilable(T.any(String, StatelyDB::UUID, T.untyped))).returns(StatelyDB::KeyPath) }
     def self.with(namespace, identifier = nil); end
 
     # If the value is a binary string, encode it as a url-safe base64 string with padding removed.
@@ -210,7 +210,7 @@ module StatelyDB
       params(
         store_id: Integer,
         schema: Module,
-        token_provider: T.nilable(Common::Auth::TokenProvider),
+        token_provider: T.nilable(StatelyDB::Common::Auth::TokenProvider),
         endpoint: T.nilable(String),
         region: T.nilable(String),
         no_auth: T::Boolean
@@ -321,7 +321,7 @@ module StatelyDB
     sig do
       params(
         limit: Integer,
-        item_types: T::Array[T.any(Class, String)],
+        item_types: T::Array[T.any(T::Class[T.anything], String)],
         total_segments: T.nilable(Integer),
         segment_index: T.nilable(Integer)
       ).returns(T.any(T::Array[StatelyDB::Item], StatelyDB::Token))
@@ -450,7 +450,7 @@ module StatelyDB
     # _@param_ `resp` — the response to process
     # 
     # _@return_ — the result of the sync operation
-    sig { params(resp: ::Stately::Db::SyncResponse).returns(StatelyDB::SyncResult) }
+    sig { params(resp: Stately::Db::GetResponse).returns(StatelyDB::SyncResult) }
     def process_sync_response(resp); end
   end
 
@@ -530,7 +530,7 @@ module StatelyDB
       # GRPC interceptor to authenticate against Stately and append bearer tokens to outgoing requests
       class Interceptor < GRPC::ClientInterceptor
         # _@param_ `token_provider` — The token provider to use for authentication
-        sig { params(token_provider: TokenProvider).void }
+        sig { params(token_provider: StatelyDB::Common::Auth::TokenProvider).void }
         def initialize(token_provider: AuthTokenProvider.new); end
 
         # gRPC client unary interceptor
@@ -654,7 +654,7 @@ module StatelyDB
         # Get the current access token
         # 
         # _@return_ — The fetched TokenResult
-        sig { returns(TokenResult) }
+        sig { returns(StatelyDB::Common::Auth::TokenResult) }
         def fetch; end
 
         # Close the token provider and kill any background operations
@@ -664,15 +664,6 @@ module StatelyDB
 
       # StatelyAccessTokenFetcher is a TokenFetcher that fetches tokens from the StatelyDB API
       class StatelyAccessTokenFetcher < StatelyDB::Common::Auth::TokenFetcher
-        NON_RETRYABLE_ERRORS = T.let([
-  GRPC::Core::StatusCodes::UNAUTHENTICATED,
-  GRPC::Core::StatusCodes::PERMISSION_DENIED,
-  GRPC::Core::StatusCodes::NOT_FOUND,
-  GRPC::Core::StatusCodes::UNIMPLEMENTED,
-  GRPC::Core::StatusCodes::INVALID_ARGUMENT
-].freeze, T.untyped)
-        RETRY_ATTEMPTS = T.let(10, T.untyped)
-
         # _@param_ `endpoint` — The endpoint of the OAuth server
         # 
         # _@param_ `access_key` — The StatelyDB access key credential
@@ -684,7 +675,7 @@ module StatelyDB
         # Fetch a new token from the StatelyDB API
         # 
         # _@return_ — The fetched TokenResult
-        sig { returns(TokenResult) }
+        sig { returns(StatelyDB::Common::Auth::TokenResult) }
         def fetch; end
 
         # Close the token provider and kill any background operations
@@ -862,8 +853,8 @@ module StatelyDB
       # 
       # _@param_ `store_id` — the StatelyDB Store to transact against
       # 
-      # _@param_ `schema` — the schema to use for marshalling and unmarshalling Items
-      sig { params(stub: ::Stately::Db::DatabaseService::Stub, store_id: Integer, schema: ::StatelyDB::Schema).void }
+      # _@param_ `schema` — the generated Schema module to use for mapping StatelyDB Items.
+      sig { params(stub: ::Stately::Db::DatabaseService::Stub, store_id: Integer, schema: Module).void }
       def initialize(stub:, store_id:, schema:); end
 
       # Send a request and wait for a response
@@ -1066,7 +1057,7 @@ module StatelyDB
       # _@param_ `req` — the request
       # 
       # _@return_ — the response type
-      sig { params(req: ::Stately::Db::TransactionRequest).returns(Class) }
+      sig { params(req: ::Stately::Db::TransactionRequest).returns(T::Class[T.anything]) }
       def infer_response_type_from_request(req); end
 
       # We are using a oneof inside the TransactionResponse to determine the type of response. The ruby
@@ -1075,7 +1066,7 @@ module StatelyDB
       # _@param_ `resp` — the response
       # 
       # _@return_ — the response type
-      sig { params(resp: ::Stately::Db::TransactionResponse).returns(Class) }
+      sig { params(resp: ::Stately::Db::TransactionResponse).returns(T::Class[T.anything]) }
       def infer_response_type_from_response(resp); end
 
       # Result represents the results of a transaction
@@ -1105,55 +1096,7 @@ end
 
 module Stately
   module Db
-    GetRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.GetRequest").msgclass, T.untyped)
-    GetItem = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.GetItem").msgclass, T.untyped)
-    GetResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.GetResponse").msgclass, T.untyped)
-    PutRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.PutRequest").msgclass, T.untyped)
-    PutItem = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.PutItem").msgclass, T.untyped)
-    PutResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.PutResponse").msgclass, T.untyped)
-    Item = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.Item").msgclass, T.untyped)
-    BeginListRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.BeginListRequest").msgclass, T.untyped)
-    ListResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ListResponse").msgclass, T.untyped)
-    ListPartialResult = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ListPartialResult").msgclass, T.untyped)
-    ListFinished = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ListFinished").msgclass, T.untyped)
-    SortDirection = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.SortDirection").enummodule, T.untyped)
-    FilterCondition = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.FilterCondition").msgclass, T.untyped)
-    BeginScanRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.BeginScanRequest").msgclass, T.untyped)
-    SegmentationParams = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.SegmentationParams").msgclass, T.untyped)
-    DeleteRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.DeleteRequest").msgclass, T.untyped)
-    DeleteItem = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.DeleteItem").msgclass, T.untyped)
-    DeleteResult = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.DeleteResult").msgclass, T.untyped)
-    DeleteResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.DeleteResponse").msgclass, T.untyped)
-    SyncListRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.SyncListRequest").msgclass, T.untyped)
-    SyncListResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.SyncListResponse").msgclass, T.untyped)
-    SyncListReset = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.SyncListReset").msgclass, T.untyped)
-    SyncListPartialResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.SyncListPartialResponse").msgclass, T.untyped)
-    DeletedItem = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.DeletedItem").msgclass, T.untyped)
-    ListToken = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ListToken").msgclass, T.untyped)
-    TransactionRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionRequest").msgclass, T.untyped)
-    TransactionResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionResponse").msgclass, T.untyped)
-    TransactionBegin = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionBegin").msgclass, T.untyped)
-    TransactionGet = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionGet").msgclass, T.untyped)
-    TransactionBeginList = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionBeginList").msgclass, T.untyped)
-    TransactionContinueList = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionContinueList").msgclass, T.untyped)
-    TransactionPut = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionPut").msgclass, T.untyped)
-    TransactionDelete = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionDelete").msgclass, T.untyped)
-    TransactionGetResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionGetResponse").msgclass, T.untyped)
-    GeneratedID = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.GeneratedID").msgclass, T.untyped)
-    TransactionPutAck = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionPutAck").msgclass, T.untyped)
-    TransactionListResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionListResponse").msgclass, T.untyped)
-    TransactionFinished = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.TransactionFinished").msgclass, T.untyped)
-    ContinueListRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ContinueListRequest").msgclass, T.untyped)
-    ContinueListDirection = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ContinueListDirection").enummodule, T.untyped)
-    ContinueScanRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ContinueScanRequest").msgclass, T.untyped)
-    SortableProperty = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.SortableProperty").enummodule, T.untyped)
-    ScanRootPathsRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ScanRootPathsRequest").msgclass, T.untyped)
-    ScanRootPathsResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ScanRootPathsResponse").msgclass, T.untyped)
-    ScanRootPathResult = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ScanRootPathResult").msgclass, T.untyped)
-
     module DatabaseService
-      Stub = T.let(Service.rpc_stub_class, T.untyped)
-
       # DatabaseService is the service for creating, reading, updating and deleting data
       # in a StatelyDB Store. Creating and modifying Stores is done by
       # stately.dbmanagement.ManagementService.
@@ -1164,12 +1107,7 @@ module Stately
   end
 
   module Auth
-    GetAuthTokenRequest = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.auth.GetAuthTokenRequest").msgclass, T.untyped)
-    GetAuthTokenResponse = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.auth.GetAuthTokenResponse").msgclass, T.untyped)
-
     module AuthService
-      Stub = T.let(Service.rpc_stub_class, T.untyped)
-
       # AuthService is the service for vending access tokens used to connect to
       # StatelyDB. This API is meant to be used from SDKs. Access Keys are created
       # and managed from the stately.dbmanagement.UserService.
@@ -1180,17 +1118,8 @@ module Stately
   end
 
   module Errors
-    StatelyErrorDetails = T.let(::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.errors.StatelyErrorDetails").msgclass, T.untyped)
   end
 end
 
 module StatelyCode
-  CACHED_SCHEMA_TOO_OLD = T.let("CachedSchemaTooOld", T.untyped)
-  CONCURRENT_MODIFICATION = T.let("ConcurrentModification", T.untyped)
-  CONDITIONAL_CHECK_FAILED = T.let("ConditionalCheckFailed", T.untyped)
-  ITEM_REUSED_WITH_DIFFERENT_KEY_PATH = T.let("ItemReusedWithDifferentKeyPath", T.untyped)
-  NON_RECOVERABLE_TRANSACTION = T.let("NonRecoverableTransaction", T.untyped)
-  STORE_IN_USE = T.let("StoreInUse", T.untyped)
-  STORE_REQUEST_LIMIT_EXCEEDED = T.let("StoreRequestLimitExceeded", T.untyped)
-  STORE_THROUGHPUT_EXCEEDED = T.let("StoreThroughputExceeded", T.untyped)
 end

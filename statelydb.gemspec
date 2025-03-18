@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = "statelydb"
-  s.version = "0.22.0"
+  s.version = "0.23.0"
   s.required_ruby_version = ">= 3.3.0"
   s.licenses    = ["Apache-2.0"]
   s.summary     = "A library for interacting with StatelyDB"

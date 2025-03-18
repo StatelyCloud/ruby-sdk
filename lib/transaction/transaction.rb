@@ -44,7 +44,7 @@ module StatelyDB
       #
       # @param stub [::Stately::Db::DatabaseService::Stub] a StatelyDB gRPC stub
       # @param store_id [Integer] the StatelyDB Store to transact against
-      # @param schema [::StatelyDB::Schema] the schema to use for marshalling and unmarshalling Items
+      # @param schema [Module] the generated Schema module to use for mapping StatelyDB Items.
       def initialize(stub:, store_id:, schema:)
         @stub = stub
         @store_id = store_id
@@ -333,7 +333,7 @@ module StatelyDB
       # @param limit [Integer] the maximum number of items to return
       # @param sort_property [String] the property to sort by
       # @param sort_direction [Symbol] the direction to sort by (:ascending or :descending)
-      # @return [(Array<StatelyDB::Item>, ::Stately::Db::ListToken)] the list of Items and the token
+      # @return [Array(Array<StatelyDB::Item>, ::Stately::Db::ListToken)] the list of Items and the token
       #
       # Example:
       #   client.data.transaction do |txn|
@@ -365,7 +365,7 @@ module StatelyDB
       #
       # @param token [::Stately::Db::ListToken] the token to continue from
       # @param continue_direction [Symbol] the direction to continue by (:forward or :backward)
-      # @return [(Array<StatelyDB::Item>, ::Stately::Db::ListToken)] the list of Items and the token
+      # @return [Array(Array<StatelyDB::Item>, ::Stately::Db::ListToken)] the list of Items and the token
       #
       # Example:
       #   client.data.transaction do |txn|
@@ -389,7 +389,7 @@ module StatelyDB
       # Processes a list response from begin_list or continue_list
       #
       # @param req [::Stately::Db::TransactionRequest] the request to send
-      # @return [(Array<StatelyDB::Item>, ::Stately::Db::ListToken)] the list of Items and the token
+      # @return [Array(Array<StatelyDB::Item>, ::Stately::Db::ListToken)] the list of Items and the token
       # @api private
       # @!visibility private
       def do_list_request_response(req)

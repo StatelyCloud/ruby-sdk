@@ -25,7 +25,7 @@ module StatelyDB
     #
     # @param store_id [Integer] the StatelyDB to use for all operations with this client.
     # @param schema [Module] the generated Schema module to use for mapping StatelyDB Items.
-    # @param token_provider [Common::Auth::TokenProvider] the token provider to use for authentication.
+    # @param token_provider [StatelyDB::Common::Auth::TokenProvider] the token provider to use for authentication.
     # @param endpoint [String] the endpoint to connect to.
     # @param region [String] the region to connect to.
     # @param no_auth [Boolean] Indicates that the client should not attempt to get
@@ -388,7 +388,7 @@ module StatelyDB
     # Process a list response from begin_list or continue_list
     #
     # @param resp [::Stately::Db::ListResponse] the response to process
-    # @return [(Array<StatelyDB::Item>, StatelyDB::Token)] the list of Items and the token
+    # @return [Array(Array<StatelyDB::Item>, StatelyDB::Token)] the list of Items and the token
     # @api private
     # @!visibility private
     def process_list_response(resp)

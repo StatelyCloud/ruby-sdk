@@ -31,7 +31,7 @@ module StatelyDB
       # for individual token fetcher implementations
       class TokenFetcher
         # Get the current access token
-        # @return [TokenResult] The fetched TokenResult
+        # @return [StatelyDB::Common::Auth::TokenResult] The fetched TokenResult
         def fetch
           raise "Not Implemented"
         end
@@ -75,7 +75,7 @@ module StatelyDB
         end
 
         # Fetch a new token from the StatelyDB API
-        # @return [TokenResult] The fetched TokenResult
+        # @return [StatelyDB::Common::Auth::TokenResult] The fetched TokenResult
         def fetch
           RETRY_ATTEMPTS.times do |i|
             resp = @stub.get_auth_token(Stately::Auth::GetAuthTokenRequest.new(access_key: @access_key))

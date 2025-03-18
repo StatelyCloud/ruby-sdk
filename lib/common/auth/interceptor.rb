@@ -9,7 +9,7 @@ module StatelyDB
     module Auth
       # GRPC interceptor to authenticate against Stately and append bearer tokens to outgoing requests
       class Interceptor < GRPC::ClientInterceptor
-        # @param [TokenProvider] token_provider The token provider to use for authentication
+        # @param [StatelyDB::Common::Auth::TokenProvider] token_provider The token provider to use for authentication
         def initialize(
           token_provider: AuthTokenProvider.new
         )

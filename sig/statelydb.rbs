@@ -130,7 +130,7 @@ module StatelyDB
     # _@param_ `namespace`
     # 
     # _@param_ `identifier`
-    def with: (String namespace, ?(String | StatelyDB::UUID | _ToS)? identifier) -> KeyPath
+    def with: (String namespace, ?(String | StatelyDB::UUID | _ToS)? identifier) -> StatelyDB::KeyPath
 
     def to_str: () -> String
 
@@ -147,7 +147,7 @@ module StatelyDB
     # ```ruby
     # keypath = KeyPath.with("genres", "rock").with("artists", "the-beatles")
     # ```
-    def self.with: (String namespace, ?(String | StatelyDB::UUID | _ToS)? identifier) -> KeyPath
+    def self.with: (String namespace, ?(String | StatelyDB::UUID | _ToS)? identifier) -> StatelyDB::KeyPath
 
     # If the value is a binary string, encode it as a url-safe base64 string with padding removed.
     # 
@@ -175,7 +175,7 @@ module StatelyDB
     def initialize: (
                       store_id: Integer,
                       schema: Module,
-                      ?token_provider: Common::Auth::TokenProvider?,
+                      ?token_provider: StatelyDB::Common::Auth::TokenProvider?,
                       ?endpoint: String?,
                       ?region: String?,
                       ?no_auth: bool
@@ -464,7 +464,7 @@ module StatelyDB
       # GRPC interceptor to authenticate against Stately and append bearer tokens to outgoing requests
       class Interceptor < GRPC::ClientInterceptor
         # _@param_ `token_provider` — The token provider to use for authentication
-        def initialize: (?token_provider: TokenProvider) -> void
+        def initialize: (?token_provider: StatelyDB::Common::Auth::TokenProvider) -> void
 
         # gRPC client unary interceptor
         # 
@@ -571,7 +571,7 @@ module StatelyDB
         # Get the current access token
         # 
         # _@return_ — The fetched TokenResult
-        def fetch: () -> TokenResult
+        def fetch: () -> StatelyDB::Common::Auth::TokenResult
 
         # Close the token provider and kill any background operations
         def close: () -> void
@@ -592,7 +592,7 @@ module StatelyDB
         # Fetch a new token from the StatelyDB API
         # 
         # _@return_ — The fetched TokenResult
-        def fetch: () -> TokenResult
+        def fetch: () -> StatelyDB::Common::Auth::TokenResult
 
         # Close the token provider and kill any background operations
         def close: () -> void
@@ -747,8 +747,8 @@ module StatelyDB
       # 
       # _@param_ `store_id` — the StatelyDB Store to transact against
       # 
-      # _@param_ `schema` — the schema to use for marshalling and unmarshalling Items
-      def initialize: (stub: ::Stately::Db::DatabaseService::Stub, store_id: Integer, schema: ::StatelyDB::Schema) -> void
+      # _@param_ `schema` — the generated Schema module to use for mapping StatelyDB Items.
+      def initialize: (stub: ::Stately::Db::DatabaseService::Stub, store_id: Integer, schema: Module) -> void
 
       # Send a request and wait for a response
       # 
