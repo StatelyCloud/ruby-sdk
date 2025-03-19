@@ -127,6 +127,7 @@ module StatelyDB
         @is_transaction_open = true
         req = Stately::Db::TransactionRequest.new(
           begin: Stately::Db::TransactionBegin.new(store_id: @store_id.to_i,
+                                                   schema_id: @schema::SCHEMA_ID,
                                                    schema_version_id: @schema::SCHEMA_VERSION_ID)
         )
         request_only(req)

@@ -107,6 +107,7 @@ module StatelyDB
       key_paths = Array(key_paths).flatten
       req = Stately::Db::GetRequest.new(
         store_id: @store_id,
+        schema_id: @schema::SCHEMA_ID,
         schema_version_id: @schema::SCHEMA_VERSION_ID,
         gets:
           key_paths.map { |key_path| Stately::Db::GetItem.new(key_path: String(key_path)) },
@@ -142,6 +143,7 @@ module StatelyDB
         sort_property:,
         sort_direction:,
         allow_stale: @allow_stale,
+        schema_id: @schema::SCHEMA_ID,
         schema_version_id: @schema::SCHEMA_VERSION_ID
       )
       resp = @stub.begin_list(req)
@@ -159,6 +161,7 @@ module StatelyDB
     def continue_list(token)
       req = Stately::Db::ContinueListRequest.new(
         token_data: token.token_data,
+        schema_id: @schema::SCHEMA_ID,
         schema_version_id: @schema::SCHEMA_VERSION_ID
       )
       resp = @stub.continue_list(req)
@@ -202,6 +205,7 @@ module StatelyDB
         filter_condition: item_types.map do |item_type|
           Stately::Db::FilterCondition.new(item_type: item_type.respond_to?(:name) ? item_type.name.split("::").last : item_type)
         end,
+        schema_id: @schema::SCHEMA_ID,
         schema_version_id: @schema::SCHEMA_VERSION_ID
       )
       resp = @stub.begin_scan(req)
@@ -222,6 +226,7 @@ module StatelyDB
     def continue_scan(token)
       req = Stately::Db::ContinueScanRequest.new(
         token_data: token.token_data,
+        schema_id: @schema::SCHEMA_ID,
         schema_version_id: @schema::SCHEMA_VERSION_ID
       )
       resp = @stub.continue_scan(req)
@@ -239,6 +244,7 @@ module StatelyDB
     def sync_list(token)
       req = Stately::Db::SyncListRequest.new(
         token_data: token.token_data,
+        schema_id: @schema::SCHEMA_ID,
         schema_version_id: @schema::SCHEMA_VERSION_ID
       )
       resp = @stub.sync_list(req)
@@ -301,6 +307,7 @@ module StatelyDB
       end
       req = Stately::Db::PutRequest.new(
         store_id: @store_id,
+        schema_id: @schema::SCHEMA_ID,
         schema_version_id: @schema::SCHEMA_VERSION_ID,
         puts:
       )
@@ -324,6 +331,7 @@ module StatelyDB
       key_paths = Array(key_paths).flatten
       req = Stately::Db::DeleteRequest.new(
         store_id: @store_id,
+        schema_id: @schema::SCHEMA_ID,
         schema_version_id: @schema::SCHEMA_VERSION_ID,
         deletes: key_paths.map { |key_path| Stately::Db::DeleteItem.new(key_path: String(key_path)) }
       )
