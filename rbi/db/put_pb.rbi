@@ -10,13 +10,15 @@ class Stately::Db::PutRequest
     params(
       store_id: T.nilable(Integer),
       puts: T.nilable(T::Array[T.nilable(Stately::Db::PutItem)]),
-      schema_version_id: T.nilable(Integer)
+      schema_version_id: T.nilable(Integer),
+      schema_id: T.nilable(Integer)
     ).void
   end
   def initialize(
     store_id: 0,
     puts: [],
-    schema_version_id: 0
+    schema_version_id: 0,
+    schema_id: 0
   )
   end
 
@@ -81,6 +83,30 @@ class Stately::Db::PutRequest
 # you.
   sig { void }
   def clear_schema_version_id
+  end
+
+  # schema_id refers to the schema to use for this operation.
+# If the store_id does not have a schema with this ID, the operation will
+# error with SchemaNotFound error. You should not have to set this manually
+# as your generated SDK should know its schema and wire this in for you.
+  sig { returns(Integer) }
+  def schema_id
+  end
+
+  # schema_id refers to the schema to use for this operation.
+# If the store_id does not have a schema with this ID, the operation will
+# error with SchemaNotFound error. You should not have to set this manually
+# as your generated SDK should know its schema and wire this in for you.
+  sig { params(value: Integer).void }
+  def schema_id=(value)
+  end
+
+  # schema_id refers to the schema to use for this operation.
+# If the store_id does not have a schema with this ID, the operation will
+# error with SchemaNotFound error. You should not have to set this manually
+# as your generated SDK should know its schema and wire this in for you.
+  sig { void }
+  def clear_schema_id
   end
 
   sig { params(field: String).returns(T.untyped) }
