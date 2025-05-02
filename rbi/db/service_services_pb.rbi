@@ -167,18 +167,5 @@ module Stately::Db::DatabaseService
     end
     def transaction(request)
     end
-
-    # ScanRootPaths lists root paths (Groups) in the Store. This is a very
-# expensive operation, as it must consult multiple partitions and it reads
-# and ignores a lot of data. It is provided for use in the web console's data
-# browser and is not exposed to customers. This operation will fail if the
-# caller does not have permission to read Items.
-    sig do
-      params(
-        request: Stately::Db::ScanRootPathsRequest
-      ).returns(Stately::Db::ScanRootPathsResponse)
-    end
-    def scan_root_paths(request)
-    end
   end
 end

@@ -55,32 +55,26 @@ class Stately::Db::PutRequest
   def clear_puts
   end
 
-  # schema_version_id refers to the item version to return.
-#
-# If the store's schema does not have this version, the operation will error
-# with SchemaVersionNotFound error. You should not have to set this manually
-# as your generated SDK should know its schema version and wire this in for
-# you.
+  # schema_version_id is the version of the store's schema to use to interpret
+# items. If there is no version with this ID, the operation will error with
+# SchemaVersionNotFound error. You should not have to set this manually as
+# your generated SDK should know its schema version and wire this in for you.
   sig { returns(Integer) }
   def schema_version_id
   end
 
-  # schema_version_id refers to the item version to return.
-#
-# If the store's schema does not have this version, the operation will error
-# with SchemaVersionNotFound error. You should not have to set this manually
-# as your generated SDK should know its schema version and wire this in for
-# you.
+  # schema_version_id is the version of the store's schema to use to interpret
+# items. If there is no version with this ID, the operation will error with
+# SchemaVersionNotFound error. You should not have to set this manually as
+# your generated SDK should know its schema version and wire this in for you.
   sig { params(value: Integer).void }
   def schema_version_id=(value)
   end
 
-  # schema_version_id refers to the item version to return.
-#
-# If the store's schema does not have this version, the operation will error
-# with SchemaVersionNotFound error. You should not have to set this manually
-# as your generated SDK should know its schema version and wire this in for
-# you.
+  # schema_version_id is the version of the store's schema to use to interpret
+# items. If there is no version with this ID, the operation will error with
+# SchemaVersionNotFound error. You should not have to set this manually as
+# your generated SDK should know its schema version and wire this in for you.
   sig { void }
   def clear_schema_version_id
   end

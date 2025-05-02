@@ -19,7 +19,7 @@ module StatelyDB
       to_str
     end
 
-    # to_str returns the UUID as a base16 string (eg: "f4a8a24a-129d-411f-91d2-6d19d0eaa096")
+    # to_str returns the UUID as a base16 string (eg: "f4a8a24a-129d-411f-91d2-6d19d0eaa096").
     #
     # Note: to_str is a type coercion method that is called by Ruby when an object is coerced to a string.
     # @return [String]

@@ -105,12 +105,6 @@ module Stately
         # fail if another transaction commits before this one finishes - in that
         # case, you should retry your transaction.
         rpc :Transaction, stream(::Stately::Db::TransactionRequest), stream(::Stately::Db::TransactionResponse)
-        # ScanRootPaths lists root paths (Groups) in the Store. This is a very
-        # expensive operation, as it must consult multiple partitions and it reads
-        # and ignores a lot of data. It is provided for use in the web console's data
-        # browser and is not exposed to customers. This operation will fail if the
-        # caller does not have permission to read Items.
-        rpc :ScanRootPaths, ::Stately::Db::ScanRootPathsRequest, ::Stately::Db::ScanRootPathsResponse
       end
 
       Stub = Service.rpc_stub_class
