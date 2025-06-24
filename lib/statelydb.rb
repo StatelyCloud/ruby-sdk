@@ -49,11 +49,13 @@ module StatelyDB
 
       endpoint = self.class.make_endpoint(endpoint:, region:)
       @channel = Common::Net.new_channel(endpoint:)
-      # Make sure to use the correct endpoint for the default token provider
-      @token_provider = token_provider || Common::Auth::AuthTokenProvider.new(endpoint:)
-
       interceptors = [Common::ErrorInterceptor.new]
-      interceptors << Common::Auth::Interceptor.new(token_provider: @token_provider) unless no_auth
+      # Make sure to use the correct endpoint for the default token provider
+      unless no_auth
+        @token_provider = token_provider || Common::Auth::AuthTokenProvider.new
+        @token_provider.start(endpoint: endpoint)
+        interceptors << Common::Auth::Interceptor.new(token_provider: @token_provider)
+      end
 
       @stub = Stately::Db::DatabaseService::Stub.new(nil, nil,
                                                      channel_override: @channel, interceptors:)

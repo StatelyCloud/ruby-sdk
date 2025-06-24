@@ -6,12 +6,13 @@ require 'google/protobuf'
 
 require 'api/db/item_pb'
 require 'api/db/item_property_pb'
+require 'api/db/list_filters_pb'
 require 'api/db/list_token_pb'
 
 
-descriptor_data = "\n\rdb/list.proto\x12\nstately.db\x1a\rdb/item.proto\x1a\x16\x64\x62/item_property.proto\x1a\x13\x64\x62/list_token.proto\"\xda\x02\n\x10\x42\x65ginListRequest\x12\x19\n\x08store_id\x18\x01 \x01(\x04R\x07storeId\x12&\n\x0fkey_path_prefix\x18\x02 \x01(\tR\rkeyPathPrefix\x12\x14\n\x05limit\x18\x03 \x01(\rR\x05limit\x12\x1f\n\x0b\x61llow_stale\x18\x04 \x01(\x08R\nallowStale\x12\x41\n\rsort_property\x18\x05 \x01(\x0e\x32\x1c.stately.db.SortablePropertyR\x0csortProperty\x12@\n\x0esort_direction\x18\x06 \x01(\x0e\x32\x19.stately.db.SortDirectionR\rsortDirection\x12*\n\x11schema_version_id\x18\x07 \x01(\rR\x0fschemaVersionId\x12\x1b\n\tschema_id\x18\x08 \x01(\x04R\x08schemaId\"\x8b\x01\n\x0cListResponse\x12\x37\n\x06result\x18\x01 \x01(\x0b\x32\x1d.stately.db.ListPartialResultH\x00R\x06result\x12\x36\n\x08\x66inished\x18\x02 \x01(\x0b\x32\x18.stately.db.ListFinishedH\x00R\x08\x66inishedB\n\n\x08response\";\n\x11ListPartialResult\x12&\n\x05items\x18\x01 \x03(\x0b\x32\x10.stately.db.ItemR\x05items\";\n\x0cListFinished\x12+\n\x05token\x18\x01 \x01(\x0b\x32\x15.stately.db.ListTokenR\x05token*8\n\rSortDirection\x12\x12\n\x0eSORT_ASCENDING\x10\x00\x12\x13\n\x0fSORT_DESCENDING\x10\x01\x42\x64\n\x0e\x63om.stately.dbB\tListProtoP\x01\xa2\x02\x03SDX\xaa\x02\nStately.Db\xca\x02\nStately\\Db\xe2\x02\x16Stately\\Db\\GPBMetadata\xea\x02\x0bStately::Dbb\x06proto3"
+descriptor_data = "\n\rdb/list.proto\x12\nstately.db\x1a\rdb/item.proto\x1a\x16\x64\x62/item_property.proto\x1a\x15\x64\x62/list_filters.proto\x1a\x13\x64\x62/list_token.proto\"\xe5\x03\n\x10\x42\x65ginListRequest\x12\x19\n\x08store_id\x18\x01 \x01(\x04R\x07storeId\x12&\n\x0fkey_path_prefix\x18\x02 \x01(\tR\rkeyPathPrefix\x12\x14\n\x05limit\x18\x03 \x01(\rR\x05limit\x12\x1f\n\x0b\x61llow_stale\x18\x04 \x01(\x08R\nallowStale\x12\x41\n\rsort_property\x18\x05 \x01(\x0e\x32\x1c.stately.db.SortablePropertyR\x0csortProperty\x12@\n\x0esort_direction\x18\x06 \x01(\x0e\x32\x19.stately.db.SortDirectionR\rsortDirection\x12*\n\x11schema_version_id\x18\x07 \x01(\rR\x0fschemaVersionId\x12\x1b\n\tschema_id\x18\x08 \x01(\x04R\x08schemaId\x12H\n\x11\x66ilter_conditions\x18\t \x03(\x0b\x32\x1b.stately.db.FilterConditionR\x10\x66ilterConditions\x12?\n\x0ekey_conditions\x18\n \x03(\x0b\x32\x18.stately.db.KeyConditionR\rkeyConditions\"\x8b\x01\n\x0cListResponse\x12\x37\n\x06result\x18\x01 \x01(\x0b\x32\x1d.stately.db.ListPartialResultH\x00R\x06result\x12\x36\n\x08\x66inished\x18\x02 \x01(\x0b\x32\x18.stately.db.ListFinishedH\x00R\x08\x66inishedB\n\n\x08response\";\n\x11ListPartialResult\x12&\n\x05items\x18\x01 \x03(\x0b\x32\x10.stately.db.ItemR\x05items\";\n\x0cListFinished\x12+\n\x05token\x18\x01 \x01(\x0b\x32\x15.stately.db.ListTokenR\x05token\"[\n\x0cKeyCondition\x12\x19\n\x08key_path\x18\x01 \x01(\tR\x07keyPath\x12\x30\n\x08operator\x18\x02 \x01(\x0e\x32\x14.stately.db.OperatorR\x08operator*8\n\rSortDirection\x12\x12\n\x0eSORT_ASCENDING\x10\x00\x12\x13\n\x0fSORT_DESCENDING\x10\x01*\x9c\x01\n\x08Operator\x12\x18\n\x14OPERATOR_UNSPECIFIED\x10\x00\x12\x19\n\x15OPERATOR_GREATER_THAN\x10\x04\x12\"\n\x1eOPERATOR_GREATER_THAN_OR_EQUAL\x10\x05\x12\x16\n\x12OPERATOR_LESS_THAN\x10\x06\x12\x1f\n\x1bOPERATOR_LESS_THAN_OR_EQUAL\x10\x07\x42\x64\n\x0e\x63om.stately.dbB\tListProtoP\x01\xa2\x02\x03SDX\xaa\x02\nStately.Db\xca\x02\nStately\\Db\xe2\x02\x16Stately\\Db\\GPBMetadata\xea\x02\x0bStately::Dbb\x06proto3"
 
-pool = Google::Protobuf::DescriptorPool.generated_pool
+pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Stately
@@ -20,6 +21,8 @@ module Stately
     ListResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ListResponse").msgclass
     ListPartialResult = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ListPartialResult").msgclass
     ListFinished = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.ListFinished").msgclass
+    KeyCondition = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.KeyCondition").msgclass
     SortDirection = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.SortDirection").enummodule
+    Operator = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.Operator").enummodule
   end
 end

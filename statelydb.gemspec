@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
+require_relative "lib/version"
 Gem::Specification.new do |s|
   s.name = "statelydb"
-  s.version = "0.25.1"
-  s.required_ruby_version = ">= 3.3.0"
+  s.version = StatelyDB::VERSION
+  s.required_ruby_version = ">= 3.2.0"
   s.licenses    = ["Apache-2.0"]
   s.summary     = "A library for interacting with StatelyDB"
-  s.description = ""
+  s.description = "Client for StatelyDB, a document database built on top of DynamoDB with Elastic Schema that allows you to change your data model any time with automatic backwards compatibility." # rubocop:disable Layout/LineLength
   s.authors     = ["Stately Cloud, Inc."]
   s.email       = "support@stately.cloud"
   s.files       = ["README.md", "LICENSE.txt"]

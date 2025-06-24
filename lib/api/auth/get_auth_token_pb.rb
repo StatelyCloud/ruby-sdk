@@ -7,7 +7,7 @@ require 'google/protobuf'
 
 descriptor_data = "\n\x19\x61uth/get_auth_token.proto\x12\x0cstately.auth\"B\n\x13GetAuthTokenRequest\x12\x1f\n\naccess_key\x18\x01 \x01(\tH\x00R\taccessKeyB\n\n\x08identity\"W\n\x14GetAuthTokenResponse\x12\x1d\n\nauth_token\x18\x01 \x01(\tR\tauthToken\x12 \n\x0c\x65xpires_in_s\x18\x02 \x01(\x04R\nexpiresInSBv\n\x10\x63om.stately.authB\x11GetAuthTokenProtoP\x01\xa2\x02\x03SAX\xaa\x02\x0cStately.Auth\xca\x02\x0cStately\\Auth\xe2\x02\x18Stately\\Auth\\GPBMetadata\xea\x02\rStately::Authb\x06proto3"
 
-pool = Google::Protobuf::DescriptorPool.generated_pool
+pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Stately

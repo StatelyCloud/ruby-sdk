@@ -7,7 +7,7 @@ require 'google/protobuf'
 
 descriptor_data = "\n\x16\x64\x62/item_property.proto\x12\nstately.db*\x8b\x02\n\x10SortableProperty\x12\x1e\n\x1aSORTABLE_PROPERTY_KEY_PATH\x10\x00\x12+\n\'SORTABLE_PROPERTY_LAST_MODIFIED_VERSION\x10\x01\x12)\n%SORTABLE_PROPERTY_GROUP_LOCAL_INDEX_1\x10\x08\x12)\n%SORTABLE_PROPERTY_GROUP_LOCAL_INDEX_2\x10\t\x12)\n%SORTABLE_PROPERTY_GROUP_LOCAL_INDEX_3\x10\n\x12)\n%SORTABLE_PROPERTY_GROUP_LOCAL_INDEX_4\x10\x0b\x42l\n\x0e\x63om.stately.dbB\x11ItemPropertyProtoP\x01\xa2\x02\x03SDX\xaa\x02\nStately.Db\xca\x02\nStately\\Db\xe2\x02\x16Stately\\Db\\GPBMetadata\xea\x02\x0bStately::Dbb\x06proto3"
 
-pool = Google::Protobuf::DescriptorPool.generated_pool
+pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Stately

@@ -15,7 +15,9 @@ class Stately::Db::BeginListRequest
       sort_property: T.nilable(T.any(Symbol, String, Integer)),
       sort_direction: T.nilable(T.any(Symbol, String, Integer)),
       schema_version_id: T.nilable(Integer),
-      schema_id: T.nilable(Integer)
+      schema_id: T.nilable(Integer),
+      filter_conditions: T.nilable(T::Array[T.nilable(Stately::Db::FilterCondition)]),
+      key_conditions: T.nilable(T::Array[T.nilable(Stately::Db::KeyCondition)])
     ).void
   end
   def initialize(
@@ -26,7 +28,9 @@ class Stately::Db::BeginListRequest
     sort_property: :SORTABLE_PROPERTY_KEY_PATH,
     sort_direction: :SORT_ASCENDING,
     schema_version_id: 0,
-    schema_id: 0
+    schema_id: 0,
+    filter_conditions: [],
+    key_conditions: []
   )
   end
 
@@ -196,6 +200,123 @@ class Stately::Db::BeginListRequest
 # as your generated SDK should know its schema and wire this in for you.
   sig { void }
   def clear_schema_id
+  end
+
+  # filter_conditions are a set of conditions to filter the list result by.
+# If no conditions are provided, all items in the store will be returned.
+# Filter conditions are combined with OR.
+  sig { returns(T::Array[T.nilable(Stately::Db::FilterCondition)]) }
+  def filter_conditions
+  end
+
+  # filter_conditions are a set of conditions to filter the list result by.
+# If no conditions are provided, all items in the store will be returned.
+# Filter conditions are combined with OR.
+  sig { params(value: ::Google::Protobuf::RepeatedField).void }
+  def filter_conditions=(value)
+  end
+
+  # filter_conditions are a set of conditions to filter the list result by.
+# If no conditions are provided, all items in the store will be returned.
+# Filter conditions are combined with OR.
+  sig { void }
+  def clear_filter_conditions
+  end
+
+  # key_conditions are a set of conditions to apply to the list operation.
+# Wherever possible, Stately will apply these key conditions at the DB layer
+# to optimize the list operation cost.
+#
+# A maximum of two key conditions are allowed: one with a GREATER_THAN (or equal to)
+# operator and one with a LESS_THAN (or equal to) operator. Together these amount to
+# a "between" condition on the key path.
+#
+# If these conditions are provided they must share the same prefix as the
+# key_path_prefix. For example, the following is valid:
+#
+#   key_path_prefix: "/group-:groupID/namespace"
+#   key_conditions:
+#     - key_path: "/group-:groupID/namespace-44"
+#       operator: GREATER_THAN_OR_EQUAL
+#     - key_path: "/group-:groupID/namespace-100"
+#       operator: LESS_THAN_OR_EQUAL
+#
+# A key_path_prefix of "/group-:groupID" would also be valid above, as the prefix is shared
+# with the key conditions.
+#
+# The following is NOT valid because the key_path_prefix does not
+# share the same prefix as the key conditions:
+#
+#   key_path_prefix: "/group-:groupID/namespace"
+#   key_conditions:
+#     - key_path: "/group-:groupID/beatles-1984"
+#       operator: GREATER_THAN_OR_EQUAL
+  sig { returns(T::Array[T.nilable(Stately::Db::KeyCondition)]) }
+  def key_conditions
+  end
+
+  # key_conditions are a set of conditions to apply to the list operation.
+# Wherever possible, Stately will apply these key conditions at the DB layer
+# to optimize the list operation cost.
+#
+# A maximum of two key conditions are allowed: one with a GREATER_THAN (or equal to)
+# operator and one with a LESS_THAN (or equal to) operator. Together these amount to
+# a "between" condition on the key path.
+#
+# If these conditions are provided they must share the same prefix as the
+# key_path_prefix. For example, the following is valid:
+#
+#   key_path_prefix: "/group-:groupID/namespace"
+#   key_conditions:
+#     - key_path: "/group-:groupID/namespace-44"
+#       operator: GREATER_THAN_OR_EQUAL
+#     - key_path: "/group-:groupID/namespace-100"
+#       operator: LESS_THAN_OR_EQUAL
+#
+# A key_path_prefix of "/group-:groupID" would also be valid above, as the prefix is shared
+# with the key conditions.
+#
+# The following is NOT valid because the key_path_prefix does not
+# share the same prefix as the key conditions:
+#
+#   key_path_prefix: "/group-:groupID/namespace"
+#   key_conditions:
+#     - key_path: "/group-:groupID/beatles-1984"
+#       operator: GREATER_THAN_OR_EQUAL
+  sig { params(value: ::Google::Protobuf::RepeatedField).void }
+  def key_conditions=(value)
+  end
+
+  # key_conditions are a set of conditions to apply to the list operation.
+# Wherever possible, Stately will apply these key conditions at the DB layer
+# to optimize the list operation cost.
+#
+# A maximum of two key conditions are allowed: one with a GREATER_THAN (or equal to)
+# operator and one with a LESS_THAN (or equal to) operator. Together these amount to
+# a "between" condition on the key path.
+#
+# If these conditions are provided they must share the same prefix as the
+# key_path_prefix. For example, the following is valid:
+#
+#   key_path_prefix: "/group-:groupID/namespace"
+#   key_conditions:
+#     - key_path: "/group-:groupID/namespace-44"
+#       operator: GREATER_THAN_OR_EQUAL
+#     - key_path: "/group-:groupID/namespace-100"
+#       operator: LESS_THAN_OR_EQUAL
+#
+# A key_path_prefix of "/group-:groupID" would also be valid above, as the prefix is shared
+# with the key conditions.
+#
+# The following is NOT valid because the key_path_prefix does not
+# share the same prefix as the key conditions:
+#
+#   key_path_prefix: "/group-:groupID/namespace"
+#   key_conditions:
+#     - key_path: "/group-:groupID/beatles-1984"
+#       operator: GREATER_THAN_OR_EQUAL
+  sig { void }
+  def clear_key_conditions
   end
 
   sig { params(field: String).returns(T.untyped) }
@@ -448,9 +569,149 @@ class Stately::Db::ListFinished
   end
 end
 
+# A KeyCondition is an additional constraint to be applied to the list
+# operation. It is used to filter the results based on a specific key path
+# and an operator.
+# Wherever possible, stately will apply these key conditions at the DB layer
+# to optimize the list operation latency and cost.
+# Key conditions may be combined with a key_path_prefix to further
+# optimize the list operation. HOWEVER Key conditions must share the
+# same prefix as the key_path_prefix.
+class Stately::Db::KeyCondition
+  include ::Google::Protobuf::MessageExts
+  extend ::Google::Protobuf::MessageExts::ClassMethods
+
+  sig do
+    params(
+      key_path: T.nilable(String),
+      operator: T.nilable(T.any(Symbol, String, Integer))
+    ).void
+  end
+  def initialize(
+    key_path: "",
+    operator: :OPERATOR_UNSPECIFIED
+  )
+  end
+
+  # key_path is a valid key prefix (or full key) used to filter or optimize the list
+# operation based on the operator specified below.
+  sig { returns(String) }
+  def key_path
+  end
+
+  # key_path is a valid key prefix (or full key) used to filter or optimize the list
+# operation based on the operator specified below.
+  sig { params(value: String).void }
+  def key_path=(value)
+  end
+
+  # key_path is a valid key prefix (or full key) used to filter or optimize the list
+# operation based on the operator specified below.
+  sig { void }
+  def clear_key_path
+  end
+
+  # Operator indicates how to apply key_path condition to the list operation.
+# Valid options are:
+# - GREATER_THAN: key_path must be greater than the specified value
+# - GREATER_THAN_OR_EQUAL: key_path must be greater than or equal to the specified value
+# - LESS_THAN: key_path must be less than the specified value
+# - LESS_THAN_OR_EQUAL: key_path must be less than or equal to the specified value
+#
+# Note: Operators are strictly evaluated they do not change meaning based on sort direction.
+# For example, regardless of sort direction, a GREATER_THAN operator
+# will still mean that a key_path must be greater than the specified value in order
+# to be included in the result set.
+  sig { returns(T.any(Symbol, Integer)) }
+  def operator
+  end
+
+  # Operator indicates how to apply key_path condition to the list operation.
+# Valid options are:
+# - GREATER_THAN: key_path must be greater than the specified value
+# - GREATER_THAN_OR_EQUAL: key_path must be greater than or equal to the specified value
+# - LESS_THAN: key_path must be less than the specified value
+# - LESS_THAN_OR_EQUAL: key_path must be less than or equal to the specified value
+#
+# Note: Operators are strictly evaluated they do not change meaning based on sort direction.
+# For example, regardless of sort direction, a GREATER_THAN operator
+# will still mean that a key_path must be greater than the specified value in order
+# to be included in the result set.
+  sig { params(value: T.any(Symbol, String, Integer)).void }
+  def operator=(value)
+  end
+
+  # Operator indicates how to apply key_path condition to the list operation.
+# Valid options are:
+# - GREATER_THAN: key_path must be greater than the specified value
+# - GREATER_THAN_OR_EQUAL: key_path must be greater than or equal to the specified value
+# - LESS_THAN: key_path must be less than the specified value
+# - LESS_THAN_OR_EQUAL: key_path must be less than or equal to the specified value
+#
+# Note: Operators are strictly evaluated they do not change meaning based on sort direction.
+# For example, regardless of sort direction, a GREATER_THAN operator
+# will still mean that a key_path must be greater than the specified value in order
+# to be included in the result set.
+  sig { void }
+  def clear_operator
+  end
+
+  sig { params(field: String).returns(T.untyped) }
+  def [](field)
+  end
+
+  sig { params(field: String, value: T.untyped).void }
+  def []=(field, value)
+  end
+
+  sig { returns(T::Hash[Symbol, T.untyped]) }
+  def to_h
+  end
+
+  sig { params(str: String).returns(Stately::Db::KeyCondition) }
+  def self.decode(str)
+  end
+
+  sig { params(msg: Stately::Db::KeyCondition).returns(String) }
+  def self.encode(msg)
+  end
+
+  sig { params(str: String, kw: T.untyped).returns(Stately::Db::KeyCondition) }
+  def self.decode_json(str, **kw)
+  end
+
+  sig { params(msg: Stately::Db::KeyCondition, kw: T.untyped).returns(String) }
+  def self.encode_json(msg, **kw)
+  end
+
+  sig { returns(::Google::Protobuf::Descriptor) }
+  def self.descriptor
+  end
+end
+
 module Stately::Db::SortDirection
   self::SORT_ASCENDING = T.let(0, Integer)
   self::SORT_DESCENDING = T.let(1, Integer)
+
+  sig { params(value: Integer).returns(T.nilable(Symbol)) }
+  def self.lookup(value)
+  end
+
+  sig { params(value: Symbol).returns(T.nilable(Integer)) }
+  def self.resolve(value)
+  end
+
+  sig { returns(::Google::Protobuf::EnumDescriptor) }
+  def self.descriptor
+  end
+end
+
+module Stately::Db::Operator
+  self::OPERATOR_UNSPECIFIED = T.let(0, Integer)
+  self::OPERATOR_GREATER_THAN = T.let(4, Integer)
+  self::OPERATOR_GREATER_THAN_OR_EQUAL = T.let(5, Integer)
+  self::OPERATOR_LESS_THAN = T.let(6, Integer)
+  self::OPERATOR_LESS_THAN_OR_EQUAL = T.let(7, Integer)
 
   sig { params(value: Integer).returns(T.nilable(Symbol)) }
   def self.lookup(value)

@@ -1,5 +1,7 @@
 # A module for Stately Cloud auth code
 module StatelyDB
+  VERSION: untyped
+
   # UUID is a helper class for working with UUIDs in StatelyDB. The ruby version of a StatelyDB is a binary string,
   # and this class provides convenience methods for converting to the base16 representation specified in RFC 9562.
   # Internally this class uses the byte_string attribute to store the UUID as a string with the Encoding::ASCII_8BIT
@@ -463,8 +465,10 @@ module StatelyDB
     module Auth
       # GRPC interceptor to authenticate against Stately and append bearer tokens to outgoing requests
       class Interceptor < GRPC::ClientInterceptor
-        # _@param_ `token_provider` — The token provider to use for authentication
-        def initialize: (?token_provider: StatelyDB::Common::Auth::TokenProvider) -> void
+        # This must have been started already.
+        # 
+        # _@param_ `token_provider` — The token provider to use for authentication.
+        def initialize: (token_provider: StatelyDB::Common::Auth::TokenProvider) -> void
 
         # gRPC client unary interceptor
         # 
@@ -608,6 +612,11 @@ module StatelyDB
       # TokenProvider is an abstract base class that should be extended
       # for individual token provider implementations
       class TokenProvider
+        # Start the token provider. Starting multiple times should be a no-op.
+        # 
+        # _@param_ `endpoint` — The endpoint to connect to
+        def start: (?endpoint: String) -> void
+
         # Get the current access token
         # 
         # _@param_ `force` — Whether to force a refresh of the token
@@ -624,12 +633,13 @@ module StatelyDB
       # It will default to using the value of `STATELY_ACCESS_KEY` if
       # no credentials are explicitly passed and will throw an error if no credentials are found.
       class AuthTokenProvider < StatelyDB::Common::Auth::TokenProvider
-        # _@param_ `endpoint` — The endpoint of the auth server
-        # 
         # _@param_ `access_key` — The StatelyDB access key credential
         # 
         # _@param_ `base_retry_backoff_secs` — The base retry backoff in seconds
-        def initialize: (?endpoint: String, ?access_key: String, ?base_retry_backoff_secs: Float) -> void
+        def initialize: (?access_key: String, ?base_retry_backoff_secs: Float) -> void
+
+        # Start the token provider. Starting multiple times is a no-op.
+        def start: (?endpoint: String) -> void
 
         # Close the token provider and kill any background operations
         # This just invokes the close method on the actor which should do the cleanup
@@ -650,9 +660,9 @@ module StatelyDB
           # _@param_ `base_retry_backoff_secs` — The base retry backoff in seconds
           def initialize: (endpoint: String, access_key: String, base_retry_backoff_secs: Float) -> void
 
-          # Initialize the actor. This runs on the actor thread which means
+          # Start the actor. This runs on the actor thread which means
           # we can dispatch async operations here.
-          def init: () -> void
+          def start: () -> void
 
           # Close the token provider and kill any background operations
           def close: () -> void
@@ -978,8 +988,9 @@ module Stately
     ListResponse: untyped
     ListPartialResult: untyped
     ListFinished: untyped
+    KeyCondition: untyped
     SortDirection: untyped
-    FilterCondition: untyped
+    Operator: untyped
     BeginScanRequest: untyped
     SegmentationParams: untyped
     DeleteRequest: untyped
@@ -1005,6 +1016,7 @@ module Stately
     TransactionPutAck: untyped
     TransactionListResponse: untyped
     TransactionFinished: untyped
+    FilterCondition: untyped
     ContinueListRequest: untyped
     ContinueListDirection: untyped
     ContinueScanRequest: untyped

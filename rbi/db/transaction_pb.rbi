@@ -559,17 +559,17 @@ class Stately::Db::TransactionGet
   )
   end
 
-  # gets is up to 100 requests to get an item its key path.
+  # key paths to of each item to get.
   sig { returns(T::Array[T.nilable(Stately::Db::GetItem)]) }
   def gets
   end
 
-  # gets is up to 100 requests to get an item its key path.
+  # key paths to of each item to get.
   sig { params(value: ::Google::Protobuf::RepeatedField).void }
   def gets=(value)
   end
 
-  # gets is up to 100 requests to get an item its key path.
+  # key paths to of each item to get.
   sig { void }
   def clear_gets
   end
@@ -618,14 +618,16 @@ class Stately::Db::TransactionBeginList
       key_path_prefix: T.nilable(String),
       limit: T.nilable(Integer),
       sort_property: T.nilable(T.any(Symbol, String, Integer)),
-      sort_direction: T.nilable(T.any(Symbol, String, Integer))
+      sort_direction: T.nilable(T.any(Symbol, String, Integer)),
+      filter_conditions: T.nilable(T::Array[T.nilable(Stately::Db::FilterCondition)])
     ).void
   end
   def initialize(
     key_path_prefix: "",
     limit: 0,
     sort_property: :SORTABLE_PROPERTY_KEY_PATH,
-    sort_direction: :SORT_ASCENDING
+    sort_direction: :SORT_ASCENDING,
+    filter_conditions: []
   )
   end
 
@@ -705,6 +707,27 @@ class Stately::Db::TransactionBeginList
 # we will sort in ascending order.
   sig { void }
   def clear_sort_direction
+  end
+
+  # filter_conditions are a set of conditions to filter the list result by.
+# If no conditions are provided, all items in the store will be returned.
+# Filter conditions are combined with OR.
+  sig { returns(T::Array[T.nilable(Stately::Db::FilterCondition)]) }
+  def filter_conditions
+  end
+
+  # filter_conditions are a set of conditions to filter the list result by.
+# If no conditions are provided, all items in the store will be returned.
+# Filter conditions are combined with OR.
+  sig { params(value: ::Google::Protobuf::RepeatedField).void }
+  def filter_conditions=(value)
+  end
+
+  # filter_conditions are a set of conditions to filter the list result by.
+# If no conditions are provided, all items in the store will be returned.
+# Filter conditions are combined with OR.
+  sig { void }
+  def clear_filter_conditions
   end
 
   sig { params(field: String).returns(T.untyped) }
@@ -845,17 +868,17 @@ class Stately::Db::TransactionPut
   )
   end
 
-  # puts is up to 50 items to be put into the Store.
+  # items to put into the store.
   sig { returns(T::Array[T.nilable(Stately::Db::PutItem)]) }
   def puts
   end
 
-  # puts is up to 50 items to be put into the Store.
+  # items to put into the store.
   sig { params(value: ::Google::Protobuf::RepeatedField).void }
   def puts=(value)
   end
 
-  # puts is up to 50 items to be put into the Store.
+  # items to put into the store.
   sig { void }
   def clear_puts
   end
@@ -910,17 +933,17 @@ class Stately::Db::TransactionDelete
   )
   end
 
-  # deletes is up to 50 to be deleted from the Group.
+  # key paths of items to delete.
   sig { returns(T::Array[T.nilable(Stately::Db::DeleteItem)]) }
   def deletes
   end
 
-  # deletes is up to 50 to be deleted from the Group.
+  # key paths of items to delete.
   sig { params(value: ::Google::Protobuf::RepeatedField).void }
   def deletes=(value)
   end
 
-  # deletes is up to 50 to be deleted from the Group.
+  # key paths of items to delete.
   sig { void }
   def clear_deletes
   end

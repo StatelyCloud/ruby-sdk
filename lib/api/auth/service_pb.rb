@@ -9,7 +9,7 @@ require 'api/auth/get_auth_token_pb'
 
 descriptor_data = "\n\x12\x61uth/service.proto\x12\x0cstately.auth\x1a\x19\x61uth/get_auth_token.proto2i\n\x0b\x41uthService\x12Z\n\x0cGetAuthToken\x12!.stately.auth.GetAuthTokenRequest\x1a\".stately.auth.GetAuthTokenResponse\"\x03\x90\x02\x01\x42q\n\x10\x63om.stately.authB\x0cServiceProtoP\x01\xa2\x02\x03SAX\xaa\x02\x0cStately.Auth\xca\x02\x0cStately\\Auth\xe2\x02\x18Stately\\Auth\\GPBMetadata\xea\x02\rStately::Authb\x06proto3"
 
-pool = Google::Protobuf::DescriptorPool.generated_pool
+pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Stately

@@ -529,9 +529,11 @@ module StatelyDB
     module Auth
       # GRPC interceptor to authenticate against Stately and append bearer tokens to outgoing requests
       class Interceptor < GRPC::ClientInterceptor
-        # _@param_ `token_provider` — The token provider to use for authentication
+        # This must have been started already.
+        # 
+        # _@param_ `token_provider` — The token provider to use for authentication.
         sig { params(token_provider: StatelyDB::Common::Auth::TokenProvider).void }
-        def initialize(token_provider: AuthTokenProvider.new); end
+        def initialize(token_provider:); end
 
         # gRPC client unary interceptor
         # 
@@ -694,6 +696,12 @@ module StatelyDB
       # TokenProvider is an abstract base class that should be extended
       # for individual token provider implementations
       class TokenProvider
+        # Start the token provider. Starting multiple times should be a no-op.
+        # 
+        # _@param_ `endpoint` — The endpoint to connect to
+        sig { params(endpoint: String).void }
+        def start(endpoint: "https://api.stately.cloud"); end
+
         # Get the current access token
         # 
         # _@param_ `force` — Whether to force a refresh of the token
@@ -712,13 +720,15 @@ module StatelyDB
       # It will default to using the value of `STATELY_ACCESS_KEY` if
       # no credentials are explicitly passed and will throw an error if no credentials are found.
       class AuthTokenProvider < StatelyDB::Common::Auth::TokenProvider
-        # _@param_ `endpoint` — The endpoint of the auth server
-        # 
         # _@param_ `access_key` — The StatelyDB access key credential
         # 
         # _@param_ `base_retry_backoff_secs` — The base retry backoff in seconds
-        sig { params(endpoint: String, access_key: String, base_retry_backoff_secs: Float).void }
-        def initialize(endpoint: "https://api.stately.cloud", access_key: ENV.fetch("STATELY_ACCESS_KEY", nil), base_retry_backoff_secs: 1); end
+        sig { params(access_key: String, base_retry_backoff_secs: Float).void }
+        def initialize(access_key: ENV.fetch("STATELY_ACCESS_KEY", nil), base_retry_backoff_secs: 1); end
+
+        # Start the token provider. Starting multiple times is a no-op.
+        sig { params(endpoint: String).void }
+        def start(endpoint: "https://api.stately.cloud"); end
 
         # Close the token provider and kill any background operations
         # This just invokes the close method on the actor which should do the cleanup
@@ -742,10 +752,10 @@ module StatelyDB
           sig { params(endpoint: String, access_key: String, base_retry_backoff_secs: Float).void }
           def initialize(endpoint:, access_key:, base_retry_backoff_secs:); end
 
-          # Initialize the actor. This runs on the actor thread which means
+          # Start the actor. This runs on the actor thread which means
           # we can dispatch async operations here.
           sig { void }
-          def init; end
+          def start; end
 
           # Close the token provider and kill any background operations
           sig { void }

@@ -1,12 +1,8 @@
 # StatelyDB SDK for Ruby
 
-This is the Ruby SDK for [StatelyDB](https://stately.cloud).
+This is the Ruby SDK for [StatelyDB](https://stately.cloud). StatelyDB is a document database built on top of DynamoDB. It uses Elastic Schema to allow you to update your data model at any time, with automatic backwards and forwards compatibility.
 
 ### Getting started:
-
-##### Disclaimer:
-
-We're still in an invite-only preview mode - if you're interested, please reach out to [preview@stately.cloud](mailto:preview@stately.cloud?subject=Early%20Access%20Program).
 
 Begin by following our [Getting Started Guide] which will help you define, generate, and publish a DB schema so that it can be used.
 
@@ -15,7 +11,6 @@ Begin by following our [Getting Started Guide] which will help you define, gener
 ```sh
 gem install statelydb
 ```
-
 
 ### Usage:
 

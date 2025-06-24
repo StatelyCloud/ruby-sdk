@@ -11,12 +11,55 @@ require "grpc_mock/rspec"
 RSpec.describe "AuthTokenProvider" do
   it "explodes when no credentials are passed" do
     expect do
-      StatelyDB::Common::Auth::AuthTokenProvider.new
+      StatelyDB::Common::Auth::AuthTokenProvider.new.start
     end.to raise_error(StatelyDB::Error) do |err|
       expect(err.message).to include("Unable to find an access key")
       expect(err.stately_code).to eq("Unauthenticated")
       expect(err.code_string).to eq("Unauthenticated")
     end
+  end
+
+  it "handles lifecycle correctly" do
+    GrpcMock.stub_request("/stately.auth.AuthService/GetAuthToken").to_return do |_req, _call|
+      Stately::Auth::GetAuthTokenResponse.new(
+        auth_token: "token", expires_in_s: 1
+      )
+    end
+
+    provider = StatelyDB::Common::Auth::AuthTokenProvider.new(access_key: "test-access-key")
+
+    # getting a token before starting should raise an error
+    expect do
+      StatelyDB::Common::Auth::AuthTokenProvider.new.get_token
+    end.to raise_error(StatelyDB::Error) do |err|
+      expect(err.message).to include("Token provider has not been started")
+      expect(err.stately_code).to eq("FailedPrecondition")
+      expect(err.code_string).to eq("FailedPrecondition")
+    end
+
+    # now start the provider and get a token
+    provider.start
+    expect(provider.get_token).to eql("token")
+
+    # calling start again should be a no-op
+    expect { provider.start }.not_to raise_error
+    # now close the provider
+    provider.close
+    # calling close again should be a no-op
+    expect { provider.close }.not_to raise_error
+
+    # calling get_token after close should raise an error
+    expect do
+      provider.get_token
+    end.to raise_error(StatelyDB::Error) do |err|
+      expect(err.message).to include("Token provider has not been started")
+      expect(err.stately_code).to eq("FailedPrecondition")
+      expect(err.code_string).to eq("FailedPrecondition")
+    end
+
+    # now restart the provider
+    provider.start
+    expect(provider.get_token).to eql("token")
   end
 
   it "fetches stately token as expected" do
@@ -36,6 +79,7 @@ RSpec.describe "AuthTokenProvider" do
     provider = nil
     construction_time_secs = Benchmark.realtime do
       provider = StatelyDB::Common::Auth::AuthTokenProvider.new(access_key: "test-access-key")
+      provider.start
     end
     expect(construction_time_secs).to be < 1
     expect(provider).not_to be_nil
@@ -59,6 +103,7 @@ RSpec.describe "AuthTokenProvider" do
       )
     end
     provider = StatelyDB::Common::Auth::AuthTokenProvider.new(access_key: "test-access-key")
+    provider.start
     threads = []
     100.times do
       threads << Thread.new do
@@ -79,6 +124,7 @@ RSpec.describe "AuthTokenProvider" do
       )
     end
     provider = StatelyDB::Common::Auth::AuthTokenProvider.new(access_key: "test-access-key")
+    provider.start
     expect(provider.get_token).to eql("test-token")
     expect(call_count).to be(1)
     sleep(2)
@@ -91,6 +137,7 @@ RSpec.describe "AuthTokenProvider" do
     expected_err = StandardError.new("Some error")
     GrpcMock.stub_request("/stately.auth.AuthService/GetAuthToken").to_raise(expected_err)
     provider = StatelyDB::Common::Auth::AuthTokenProvider.new(access_key: "test-access-key")
+    provider.start
     expect { provider.get_token }.to raise_exception(StandardError) do |e|
       expect(e.message).to eql(expected_err.message)
     end
@@ -111,6 +158,7 @@ RSpec.describe "AuthTokenProvider" do
       )
     end
     provider = StatelyDB::Common::Auth::AuthTokenProvider.new(access_key: "test-access-key")
+    provider.start
     expect(provider.get_token).to eql("test-token")
     expect(count).to be(2)
   ensure
@@ -125,6 +173,7 @@ RSpec.describe "AuthTokenProvider" do
                                  code: GRPC::Core::StatusCodes::UNAUTHENTICATED, stately_code: "Unauthenticated")
     end
     provider = StatelyDB::Common::Auth::AuthTokenProvider.new(access_key: "test-access-key", base_retry_backoff_secs: 0)
+    provider.start
     expect { provider.get_token }.to raise_exception(StatelyDB::Error) do |e|
       expect(e.message).to eql("(Unauthenticated/Unauthenticated): Some error")
     end
@@ -143,6 +192,7 @@ RSpec.describe "AuthTokenProvider" do
     end
 
     provider = StatelyDB::Common::Auth::AuthTokenProvider.new(access_key: "test-access-key", base_retry_backoff_secs: 0)
+    provider.start
     expect { provider.get_token }.to raise_exception(StatelyDB::Error) do |e|
       expect(e.message).to eql("(Unavailable/Unavailable): Some error")
     end
@@ -164,6 +214,7 @@ RSpec.describe "AuthTokenProvider" do
       )
     end
     provider = StatelyDB::Common::Auth::AuthTokenProvider.new(access_key: "test-access-key")
+    provider.start
 
     # get the token with long expiry to populate the cache
     expect(provider.get_token).to eql("test-token-1")
@@ -187,6 +238,7 @@ RSpec.describe "AuthTokenProvider" do
       )
     end
     provider = StatelyDB::Common::Auth::AuthTokenProvider.new(access_key: "test-access-key")
+    provider.start
     # get the token with long expiry to populate the cache
     expect(provider.get_token).to eql("test-token-1")
     # get the token again to verify the cache

@@ -24,31 +24,49 @@ module StatelyDB
       # It will default to using the value of `STATELY_ACCESS_KEY` if
       # no credentials are explicitly passed and will throw an error if no credentials are found.
       class AuthTokenProvider < TokenProvider
-        # @param [String] endpoint The endpoint of the auth server
         # @param [String] access_key The StatelyDB access key credential
         # @param [Float] base_retry_backoff_secs The base retry backoff in seconds
         def initialize(
-          endpoint: "https://api.stately.cloud",
           access_key: ENV.fetch("STATELY_ACCESS_KEY", nil),
           base_retry_backoff_secs: 1
         )
           super()
-          @actor = Async::Actor.new(Actor.new(endpoint:, access_key:, base_retry_backoff_secs:))
+          @access_key = access_key
+          @base_retry_backoff_secs = base_retry_backoff_secs
+        end
+
+        # Start the token provider. Starting multiple times is a no-op.
+        def start(
+          endpoint: "https://api.stately.cloud"
+        )
+          # If the actor is already started, do nothing
+          return unless @actor.nil?
+
+          @actor = Async::Actor.new(Actor.new(endpoint:, access_key: @access_key,
+                                              base_retry_backoff_secs: @base_retry_backoff_secs))
           # this initialization cannot happen in the constructor because it is async and must run on the event loop
           # which is not available in the constructor
-          @actor.init
+          @actor.start
         end
 
         # Close the token provider and kill any background operations
         # This just invokes the close method on the actor which should do the cleanup
         # @return [void]
         def close
-          @actor.close
+          @actor.close unless @actor.nil?
+          @actor = nil
         end
 
         # Get the current access token
         # @return [String] The current access token
         def get_token(force: false)
+          if @actor.nil?
+            raise StatelyDB::Error.new(
+              "Token provider has not been started. Call start() before get_token().",
+              code: GRPC::Core::StatusCodes::FAILED_PRECONDITION,
+              stately_code: "FailedPrecondition"
+            )
+          end
           @actor.get_token(force: force)
         end
 
@@ -80,10 +98,10 @@ module StatelyDB
             @pending_refresh = nil
           end
 
-          # Initialize the actor. This runs on the actor thread which means
+          # Start the actor. This runs on the actor thread which means
           # we can dispatch async operations here.
           # @return [void]
-          def init
+          def start
             # disable the async lib logger. We do our own error handling and propagation
             Console.logger.disable(Async::Task)
             refresh_token

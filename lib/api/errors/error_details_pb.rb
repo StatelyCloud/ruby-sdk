@@ -7,7 +7,7 @@ require 'google/protobuf'
 
 descriptor_data = "\n\x1a\x65rrors/error_details.proto\x12\x0estately.errors\"\x8d\x01\n\x13StatelyErrorDetails\x12!\n\x0cstately_code\x18\x01 \x01(\tR\x0bstatelyCode\x12\x18\n\x07message\x18\x02 \x01(\tR\x07message\x12%\n\x0eupstream_cause\x18\x03 \x01(\tR\rupstreamCause\x12\x12\n\x04\x63ode\x18\x04 \x01(\rR\x04\x63odeB\x80\x01\n\x12\x63om.stately.errorsB\x11\x45rrorDetailsProtoP\x01\xa2\x02\x03SEX\xaa\x02\x0eStately.Errors\xca\x02\x0eStately\\Errors\xe2\x02\x1aStately\\Errors\\GPBMetadata\xea\x02\x0fStately::Errorsb\x06proto3"
 
-pool = Google::Protobuf::DescriptorPool.generated_pool
+pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Stately

@@ -9,7 +9,7 @@ require 'google/protobuf/struct_pb'
 
 descriptor_data = "\n\rdb/item.proto\x12\nstately.db\x1a\x1cgoogle/protobuf/struct.proto\"u\n\x04Item\x12\x1b\n\titem_type\x18\x01 \x01(\tR\x08itemType\x12\x16\n\x05proto\x18\x02 \x01(\x0cH\x00R\x05proto\x12-\n\x04json\x18\x03 \x01(\x0b\x32\x17.google.protobuf.StructH\x00R\x04jsonB\t\n\x07payloadBd\n\x0e\x63om.stately.dbB\tItemProtoP\x01\xa2\x02\x03SDX\xaa\x02\nStately.Db\xca\x02\nStately\\Db\xe2\x02\x16Stately\\Db\\GPBMetadata\xea\x02\x0bStately::Dbb\x06proto3"
 
-pool = Google::Protobuf::DescriptorPool.generated_pool
+pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Stately

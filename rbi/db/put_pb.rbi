@@ -40,17 +40,17 @@ class Stately::Db::PutRequest
   def clear_store_id
   end
 
-  # puts is up to 50 items to be put into the Store.
+  # items to put into the store.
   sig { returns(T::Array[T.nilable(Stately::Db::PutItem)]) }
   def puts
   end
 
-  # puts is up to 50 items to be put into the Store.
+  # items to put into the store.
   sig { params(value: ::Google::Protobuf::RepeatedField).void }
   def puts=(value)
   end
 
-  # puts is up to 50 items to be put into the Store.
+  # items to put into the store.
   sig { void }
   def clear_puts
   end

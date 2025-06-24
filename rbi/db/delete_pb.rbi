@@ -40,17 +40,17 @@ class Stately::Db::DeleteRequest
   def clear_store_id
   end
 
-  # deletes is up to 50 items to be deleted from the Group.
+  # key paths of items to delete.
   sig { returns(T::Array[T.nilable(Stately::Db::DeleteItem)]) }
   def deletes
   end
 
-  # deletes is up to 50 items to be deleted from the Group.
+  # key paths of items to delete.
   sig { params(value: ::Google::Protobuf::RepeatedField).void }
   def deletes=(value)
   end
 
-  # deletes is up to 50 items to be deleted from the Group.
+  # key paths of items to delete.
   sig { void }
   def clear_deletes
   end

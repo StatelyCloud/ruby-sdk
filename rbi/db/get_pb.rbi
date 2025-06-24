@@ -42,17 +42,17 @@ class Stately::Db::GetRequest
   def clear_store_id
   end
 
-  # gets is up to 100 requests to get an item by its key path.
+  # key paths to of each item to get.
   sig { returns(T::Array[T.nilable(Stately::Db::GetItem)]) }
   def gets
   end
 
-  # gets is up to 100 requests to get an item by its key path.
+  # key paths to of each item to get.
   sig { params(value: ::Google::Protobuf::RepeatedField).void }
   def gets=(value)
   end
 
-  # gets is up to 100 requests to get an item by its key path.
+  # key paths to of each item to get.
   sig { void }
   def clear_gets
   end
