@@ -47,7 +47,8 @@ module StatelyDB
       new.with(namespace, identifier)
     end
 
-    # If the value is a binary string, encode it as a url-safe base64 string with padding removed.
+    # If the value is a binary string, encode it as a url-safe
+    # base64 string with padding removed.
     #
     # @param value [String, StatelyDB::UUID, #to_s] The value to convert to a key id.
     # @return [String]

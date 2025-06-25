@@ -151,7 +151,8 @@ module StatelyDB
     # ```
     def self.with: (String namespace, ?(String | StatelyDB::UUID | _ToS)? identifier) -> StatelyDB::KeyPath
 
-    # If the value is a binary string, encode it as a url-safe base64 string with padding removed.
+    # If the value is a binary string, encode it as a url-safe
+    # base64 string with padding removed.
     # 
     # _@param_ `value` — The value to convert to a key id.
     def self.to_key_id: ((String | StatelyDB::UUID | _ToS) value) -> String
@@ -220,26 +221,21 @@ module StatelyDB
     # ```
     def get_batch: (*(String | ::Array[String]) key_paths) -> (::Array[StatelyDB::Item] | NilClass)
 
-    # Begin listing Items from a StatelyDB Store at the given prefix.
-    # 
-    # _@param_ `prefix` — the prefix to list
-    # 
-    # _@param_ `limit` — the maximum number of items to return
-    # 
-    # _@param_ `sort_property` — the property to sort by
-    # 
-    # _@param_ `sort_direction` — the direction to sort by (:ascending or :descending)
-    # 
     # _@return_ — the list of Items and the token
     # 
     # ```ruby
     # client.data.begin_list("/ItemType-identifier", limit: 10, sort_direction: :ascending)
     # ```
     def begin_list: (
-                      String prefix,
-                      ?limit: Integer,
-                      ?sort_property: String?,
-                      ?sort_direction: Symbol
+                      untyped prefix,
+                      ?limit: untyped,
+                      ?sort_property: untyped,
+                      ?sort_direction: untyped,
+                      ?item_types: untyped,
+                      ?gt: untyped,
+                      ?gte: untyped,
+                      ?lt: untyped,
+                      ?lte: untyped
                     ) -> (::Array[StatelyDB::Item] | StatelyDB::Token)
 
     # Continue listing Items from a StatelyDB Store using a token.
@@ -891,28 +887,23 @@ module StatelyDB
       # _@return_ — nil
       def delete: (*(String | ::Array[String]) key_paths) -> void
 
-      # Begin listing Items from a StatelyDB Store at the given prefix.
-      # 
       # Example:
       #   client.data.transaction do |txn|
       #     (items, token) = txn.begin_list("/ItemType-identifier")
       #     (items, token) = txn.continue_list(token)
       #   end
       # 
-      # _@param_ `prefix` — the prefix to list
-      # 
-      # _@param_ `limit` — the maximum number of items to return
-      # 
-      # _@param_ `sort_property` — the property to sort by
-      # 
-      # _@param_ `sort_direction` — the direction to sort by (:ascending or :descending)
-      # 
       # _@return_ — the list of Items and the token
       def begin_list: (
-                        String prefix,
-                        ?limit: Integer,
-                        ?sort_property: String?,
-                        ?sort_direction: Symbol
+                        untyped prefix,
+                        ?limit: untyped,
+                        ?sort_property: untyped,
+                        ?sort_direction: untyped,
+                        ?item_types: untyped,
+                        ?gt: untyped,
+                        ?gte: untyped,
+                        ?lt: untyped,
+                        ?lte: untyped
                       ) -> [::Array[StatelyDB::Item], ::Stately::Db::ListToken]
 
       # Continue listing Items from a StatelyDB Store using a token.

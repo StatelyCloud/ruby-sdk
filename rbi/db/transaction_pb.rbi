@@ -619,7 +619,8 @@ class Stately::Db::TransactionBeginList
       limit: T.nilable(Integer),
       sort_property: T.nilable(T.any(Symbol, String, Integer)),
       sort_direction: T.nilable(T.any(Symbol, String, Integer)),
-      filter_conditions: T.nilable(T::Array[T.nilable(Stately::Db::FilterCondition)])
+      filter_conditions: T.nilable(T::Array[T.nilable(Stately::Db::FilterCondition)]),
+      key_conditions: T.nilable(T::Array[T.nilable(Stately::Db::KeyCondition)])
     ).void
   end
   def initialize(
@@ -627,7 +628,8 @@ class Stately::Db::TransactionBeginList
     limit: 0,
     sort_property: :SORTABLE_PROPERTY_KEY_PATH,
     sort_direction: :SORT_ASCENDING,
-    filter_conditions: []
+    filter_conditions: [],
+    key_conditions: []
   )
   end
 
@@ -728,6 +730,102 @@ class Stately::Db::TransactionBeginList
 # Filter conditions are combined with OR.
   sig { void }
   def clear_filter_conditions
+  end
+
+  # key_conditions are a set of conditions to apply to the list operation.
+# Wherever possible, Stately will apply these key conditions at the DB layer
+# to optimize the list operation cost.
+#
+# A maximum of two key conditions are allowed, one with a GREATER_THAN (or equal to)
+# operator and one with a LESS_THAN (or equal to) operator. Together these amount to
+# a "between" condition on the key path.
+#
+# If these conditions are provided they must share the same prefix as the
+# key_path_prefix. For example this is valid:
+#
+#   key_path_prefix: "/group-:groupID/namespace"
+#   key_conditions:
+#     - key_path: "/group-:groupID/namespace-44"
+#       operator: GREATER_THAN_OR_EQUAL
+#     - key_path: "/group-:groupID/namespace-100"
+#       operator: LESS_THAN_OR_EQUAL
+#
+# A key_path_prefix of "/group-:groupID" would also be valid above, as the prefix is shared
+# with the key conditions.
+#
+# The following is NOT valid because the key_path_prefix does not
+# share the same prefix as the key conditions:
+#
+#   key_path_prefix: "/group-:groupID/namespace"
+#   key_conditions:
+#     - key_path: "/group-:groupID/beatles-1984"
+#       operator: GREATER_THAN_OR_EQUAL
+  sig { returns(T::Array[T.nilable(Stately::Db::KeyCondition)]) }
+  def key_conditions
+  end
+
+  # key_conditions are a set of conditions to apply to the list operation.
+# Wherever possible, Stately will apply these key conditions at the DB layer
+# to optimize the list operation cost.
+#
+# A maximum of two key conditions are allowed, one with a GREATER_THAN (or equal to)
+# operator and one with a LESS_THAN (or equal to) operator. Together these amount to
+# a "between" condition on the key path.
+#
+# If these conditions are provided they must share the same prefix as the
+# key_path_prefix. For example this is valid:
+#
+#   key_path_prefix: "/group-:groupID/namespace"
+#   key_conditions:
+#     - key_path: "/group-:groupID/namespace-44"
+#       operator: GREATER_THAN_OR_EQUAL
+#     - key_path: "/group-:groupID/namespace-100"
+#       operator: LESS_THAN_OR_EQUAL
+#
+# A key_path_prefix of "/group-:groupID" would also be valid above, as the prefix is shared
+# with the key conditions.
+#
+# The following is NOT valid because the key_path_prefix does not
+# share the same prefix as the key conditions:
+#
+#   key_path_prefix: "/group-:groupID/namespace"
+#   key_conditions:
+#     - key_path: "/group-:groupID/beatles-1984"
+#       operator: GREATER_THAN_OR_EQUAL
+  sig { params(value: ::Google::Protobuf::RepeatedField).void }
+  def key_conditions=(value)
+  end
+
+  # key_conditions are a set of conditions to apply to the list operation.
+# Wherever possible, Stately will apply these key conditions at the DB layer
+# to optimize the list operation cost.
+#
+# A maximum of two key conditions are allowed, one with a GREATER_THAN (or equal to)
+# operator and one with a LESS_THAN (or equal to) operator. Together these amount to
+# a "between" condition on the key path.
+#
+# If these conditions are provided they must share the same prefix as the
+# key_path_prefix. For example this is valid:
+#
+#   key_path_prefix: "/group-:groupID/namespace"
+#   key_conditions:
+#     - key_path: "/group-:groupID/namespace-44"
+#       operator: GREATER_THAN_OR_EQUAL
+#     - key_path: "/group-:groupID/namespace-100"
+#       operator: LESS_THAN_OR_EQUAL
+#
+# A key_path_prefix of "/group-:groupID" would also be valid above, as the prefix is shared
+# with the key conditions.
+#
+# The following is NOT valid because the key_path_prefix does not
+# share the same prefix as the key conditions:
+#
+#   key_path_prefix: "/group-:groupID/namespace"
+#   key_conditions:
+#     - key_path: "/group-:groupID/beatles-1984"
+#       operator: GREATER_THAN_OR_EQUAL
+  sig { void }
+  def clear_key_conditions
   end
 
   sig { params(field: String).returns(T.untyped) }

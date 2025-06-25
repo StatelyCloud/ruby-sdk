@@ -32,7 +32,7 @@ Metrics/BlockLength:
   Enabled: false
 
 Metrics/ClassLength:
-  Max: 250
+  Enabled: false
 
 Metrics/MethodLength:
   Max: 100
@@ -112,4 +112,7 @@ RSpec/InstanceVariable:
 # Naming
 #
 Naming/AccessorMethodName:
+  Enabled: false
+
+Naming/MethodParameterName:
   Enabled: false

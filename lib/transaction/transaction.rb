@@ -334,6 +334,17 @@ module StatelyDB
       # @param limit [Integer] the maximum number of items to return
       # @param sort_property [String] the property to sort by
       # @param sort_direction [Symbol] the direction to sort by (:ascending or :descending)
+      # @param item_types [Array<Class, String>] the item types to filter by. The returned
+      #   items will be instances of one of these types.
+      # @param gt [StatelyDB::KeyPath | String] filters results to only include items with a key greater than the
+      #   specified value based on lexicographic ordering.
+      # @param gte [StatelyDB::KeyPath | String] filters results to only include items with a key greater than or equal to the
+      #   specified value based on lexicographic ordering.
+      # @param lt [StatelyDB::KeyPath | String] filters results to only include items with a key less than the
+      #   specified value based on lexicographic ordering.
+      # @param lte [StatelyDB::KeyPath | String] filters results to only include items with a key less than or equal to the
+      #   specified value based on lexicographic ordering.
+
       # @return [Array(Array<StatelyDB::Item>, ::Stately::Db::ListToken)] the list of Items and the token
       #
       # Example:
@@ -344,19 +355,42 @@ module StatelyDB
       def begin_list(prefix,
                      limit: 100,
                      sort_property: nil,
-                     sort_direction: :ascending)
+                     sort_direction: :ascending,
+                     item_types: [],
+                     gt: nil,
+                     gte: nil,
+                     lt: nil,
+                     lte: nil)
         sort_direction = case sort_direction
                          when :ascending
                            0
                          else
                            1
                          end
+        key_condition_params = [
+          [Stately::Db::Operator::OPERATOR_GREATER_THAN, gt.is_a?(String) ? gt : gt&.to_s],
+          [Stately::Db::Operator::OPERATOR_GREATER_THAN_OR_EQUAL, gte.is_a?(String) ? gte : gte&.to_s],
+          [Stately::Db::Operator::OPERATOR_LESS_THAN, lt.is_a?(String) ? lt : lt&.to_s],
+          [Stately::Db::Operator::OPERATOR_LESS_THAN_OR_EQUAL, lte.is_a?(String) ? lte : lte&.to_s]
+        ]
+        key_conditions = key_condition_params
+                         .reject { |(_, value)| value.nil? }
+                         .map do |(operator, key_path)|
+          Stately::Db::KeyCondition.new(operator: operator,
+                                        key_path: key_path)
+        end
         req = Stately::Db::TransactionRequest.new(
           begin_list: Stately::Db::TransactionBeginList.new(
             key_path_prefix: String(prefix),
             limit:,
             sort_property:,
-            sort_direction:
+            sort_direction:,
+            filter_conditions: item_types.map do |item_type|
+              Stately::Db::FilterCondition.new(
+                item_type: item_type.respond_to?(:name) ? item_type.name.split("::").last : item_type
+              )
+            end,
+            key_conditions: key_conditions
           )
         )
         do_list_request_response(req)
