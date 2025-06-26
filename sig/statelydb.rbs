@@ -208,7 +208,7 @@ module StatelyDB
     # ```ruby
     # client.get("/ItemType-identifier")
     # ```
-    def get: (String key_path) -> (StatelyDB::Item | NilClass)
+    def get: ((StatelyDB::KeyPath | String) key_path) -> (StatelyDB::Item | NilClass)
 
     # Fetch a batch of up to 100 Items from a StatelyDB Store at the given key_paths.
     # 
@@ -219,7 +219,7 @@ module StatelyDB
     # ```ruby
     # client.data.get_batch("/ItemType-identifier", "/ItemType-identifier2")
     # ```
-    def get_batch: (*(String | ::Array[String]) key_paths) -> (::Array[StatelyDB::Item] | NilClass)
+    def get_batch: (*(StatelyDB::KeyPath | String | ::Array[(StatelyDB::KeyPath | String)]) key_paths) -> (::Array[StatelyDB::Item] | NilClass)
 
     # _@return_ — the list of Items and the token
     # 
@@ -350,7 +350,7 @@ module StatelyDB
     # ```ruby
     # client.data.delete("/ItemType-identifier", "/ItemType-identifier2")
     # ```
-    def delete: (*(String | ::Array[String]) key_paths) -> void
+    def delete: (*(StatelyDB::KeyPath | String | ::Array[(StatelyDB::KeyPath | String)]) key_paths) -> void
 
     # Transaction takes a block and executes the block within a transaction.
     # If the block raises an exception, the transaction is rolled back.
@@ -813,7 +813,7 @@ module StatelyDB
       #   item = txn.get("/ItemType-identifier")
       # end
       # ```
-      def get: (String key_path) -> (StatelyDB::Item | NilClass)
+      def get: ((StatelyDB::KeyPath | String) key_path) -> (StatelyDB::Item | NilClass)
 
       # Fetch a batch of up to 100 Items from a StatelyDB Store at the given
       # key_paths. Note that Items need to exist before being retrieved inside a
@@ -828,7 +828,7 @@ module StatelyDB
       # _@param_ `key_paths` — the paths to the items. Max 100
       # 
       # _@return_ — the items
-      def get_batch: (*(String | ::Array[String]) key_paths) -> ::Array[StatelyDB::Item]
+      def get_batch: (*(StatelyDB::KeyPath | String | ::Array[(StatelyDB::KeyPath | String)]) key_paths) -> ::Array[StatelyDB::Item]
 
       # Put a single Item into a StatelyDB store. Results are not returned until the transaction is
       # committed and will be available in the Result object returned by commit. An identifier for
@@ -885,7 +885,7 @@ module StatelyDB
       # _@param_ `key_paths` — the paths to the items. Max 50 key paths.
       # 
       # _@return_ — nil
-      def delete: (*(String | ::Array[String]) key_paths) -> void
+      def delete: (*(StatelyDB::KeyPath | String | ::Array[(StatelyDB::KeyPath | String)]) key_paths) -> void
 
       # Example:
       #   client.data.transaction do |txn|
@@ -1008,6 +1008,7 @@ module Stately
     TransactionListResponse: untyped
     TransactionFinished: untyped
     FilterCondition: untyped
+    CelExpression: untyped
     ContinueListRequest: untyped
     ContinueListDirection: untyped
     ContinueScanRequest: untyped

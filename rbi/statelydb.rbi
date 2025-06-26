@@ -245,7 +245,7 @@ module StatelyDB
     # ```ruby
     # client.get("/ItemType-identifier")
     # ```
-    sig { params(key_path: String).returns(T.any(StatelyDB::Item, NilClass)) }
+    sig { params(key_path: T.any(StatelyDB::KeyPath, String)).returns(T.any(StatelyDB::Item, NilClass)) }
     def get(key_path); end
 
     # Fetch a batch of up to 100 Items from a StatelyDB Store at the given key_paths.
@@ -257,7 +257,7 @@ module StatelyDB
     # ```ruby
     # client.data.get_batch("/ItemType-identifier", "/ItemType-identifier2")
     # ```
-    sig { params(key_paths: T.any(String, T::Array[String])).returns(T.any(T::Array[StatelyDB::Item], NilClass)) }
+    sig { params(key_paths: T.any(StatelyDB::KeyPath, String, T::Array[T.any(StatelyDB::KeyPath, String)])).returns(T.any(T::Array[StatelyDB::Item], NilClass)) }
     def get_batch(*key_paths); end
 
     # _@return_ — the list of Items and the token
@@ -400,7 +400,7 @@ module StatelyDB
     # ```ruby
     # client.data.delete("/ItemType-identifier", "/ItemType-identifier2")
     # ```
-    sig { params(key_paths: T.any(String, T::Array[String])).void }
+    sig { params(key_paths: T.any(StatelyDB::KeyPath, String, T::Array[T.any(StatelyDB::KeyPath, String)])).void }
     def delete(*key_paths); end
 
     # Transaction takes a block and executes the block within a transaction.
@@ -927,7 +927,7 @@ module StatelyDB
       #   item = txn.get("/ItemType-identifier")
       # end
       # ```
-      sig { params(key_path: String).returns(T.any(StatelyDB::Item, NilClass)) }
+      sig { params(key_path: T.any(StatelyDB::KeyPath, String)).returns(T.any(StatelyDB::Item, NilClass)) }
       def get(key_path); end
 
       # Fetch a batch of up to 100 Items from a StatelyDB Store at the given
@@ -943,7 +943,7 @@ module StatelyDB
       # _@param_ `key_paths` — the paths to the items. Max 100
       # 
       # _@return_ — the items
-      sig { params(key_paths: T.any(String, T::Array[String])).returns(T::Array[StatelyDB::Item]) }
+      sig { params(key_paths: T.any(StatelyDB::KeyPath, String, T::Array[T.any(StatelyDB::KeyPath, String)])).returns(T::Array[StatelyDB::Item]) }
       def get_batch(*key_paths); end
 
       # Put a single Item into a StatelyDB store. Results are not returned until the transaction is
@@ -1003,7 +1003,7 @@ module StatelyDB
       # _@param_ `key_paths` — the paths to the items. Max 50 key paths.
       # 
       # _@return_ — nil
-      sig { params(key_paths: T.any(String, T::Array[String])).void }
+      sig { params(key_paths: T.any(StatelyDB::KeyPath, String, T::Array[T.any(StatelyDB::KeyPath, String)])).void }
       def delete(*key_paths); end
 
       # Example:

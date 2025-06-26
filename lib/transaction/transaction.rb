@@ -178,7 +178,7 @@ module StatelyDB
       # Fetch Items from a StatelyDB Store at the given key_path. Note that Items need to exist before being retrieved inside a
       # transaction.
       #
-      # @param key_path [String] the path to the item
+      # @param key_path [StatelyDB::KeyPath, String] the path to the item
       # @return [StatelyDB::Item, NilClass] the item or nil if not found
       # @raise [StatelyDB::Error::InvalidParameters] if the parameters are invalid
       # @raise [StatelyDB::Error::NotFound] if the item is not found
@@ -198,7 +198,7 @@ module StatelyDB
       # key_paths. Note that Items need to exist before being retrieved inside a
       # transaction.
       #
-      # @param key_paths [String, Array<String>] the paths to the items. Max 100
+      # @param key_paths [StatelyDB::KeyPath, String, Array<StatelyDB::KeyPath, String>] the paths to the items. Max 100
       # key paths.
       # @return [Array<StatelyDB::Item>] the items
       # @raise [StatelyDB::Error::InvalidParameters] if the parameters are invalid
@@ -310,7 +310,8 @@ module StatelyDB
       # Delete up to 50 Items from a StatelyDB Store at the given key_paths. Results are not returned until the transaction is
       # committed and will be available in the Result object returned by commit.
       #
-      # @param key_paths [String, Array<String>] the paths to the items. Max 50 key paths.
+      # @param key_paths [StatelyDB::KeyPath, String, Array<StatelyDB::KeyPath, String>] the paths
+      #   to the items. Max 50 key paths.
       # @return [void] nil
       #
       # Example:
@@ -330,7 +331,7 @@ module StatelyDB
 
       # Begin listing Items from a StatelyDB Store at the given prefix.
       #
-      # @param prefix [String] the prefix to list
+      # @param prefix [StatelyDB::KeyPath, String] the prefix to list
       # @param limit [Integer] the maximum number of items to return
       # @param sort_property [String] the property to sort by
       # @param sort_direction [Symbol] the direction to sort by (:ascending or :descending)

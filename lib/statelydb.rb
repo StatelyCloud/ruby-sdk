@@ -84,7 +84,7 @@ module StatelyDB
 
     # Fetch a single Item from a StatelyDB Store at the given key_path.
     #
-    # @param key_path [String] the path to the item
+    # @param key_path [StatelyDB::KeyPath, String] the path to the item
     # @return [StatelyDB::Item, NilClass] the Item or nil if not found
     # @raise [StatelyDB::Error] if the parameters are invalid or if the item is not found
     #
@@ -99,7 +99,8 @@ module StatelyDB
 
     # Fetch a batch of up to 100 Items from a StatelyDB Store at the given key_paths.
     #
-    # @param key_paths [String, Array<String>] the paths to the items. Max 100 key paths.
+    # @param key_paths [StatelyDB::KeyPath, String, Array<StatelyDB::KeyPath, String>] the paths
+    #   to the items. Max 100 key paths.
     # @return [Array<StatelyDB::Item>, NilClass] the items or nil if not found
     # @raise [StatelyDB::Error] if the parameters are invalid or if the item is not found
     #
@@ -124,7 +125,7 @@ module StatelyDB
 
     # Begin listing Items from a StatelyDB Store at the given prefix.
     #
-    # @param prefix [String] the prefix to list
+    # @param prefix [StatelyDB::KeyPath, String] the prefix to list
     # @param limit [Integer] the maximum number of items to return
     # @param sort_property [String] the property to sort by
     # @param sort_direction [Symbol, String, Integer] the direction to sort by (:ascending or :descending)
@@ -350,7 +351,8 @@ module StatelyDB
 
     # Delete up to 50 Items from a StatelyDB Store at the given key_paths.
     #
-    # @param key_paths [String, Array<String>] the paths to the items. Max 50 key paths.
+    # @param key_paths [StatelyDB::KeyPath, String, Array<StatelyDB::KeyPath, String>] the paths
+    #   to the items. Max 50 key paths.
     # @raise [StatelyDB::Error] if the parameters are invalid
     # @raise [StatelyDB::Error] if the item is not found
     # @return [void] nil

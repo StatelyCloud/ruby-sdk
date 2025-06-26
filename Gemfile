@@ -24,7 +24,7 @@ group :development do
   gem "rubocop-thread_safety", "0.7.3"
   gem "ruby-lsp", "0.24.2"
   gem "simplecov", "0.22.0"
-  gem "sorbet", "0.5.12200"
+  gem "sorbet", "0.5.12201"
   gem "sord", "~> 7.0"
   gem "steep", "~> 1.7"
   gem "tapioca", "0.16.11"

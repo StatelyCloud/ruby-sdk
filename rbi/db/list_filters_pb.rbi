@@ -8,27 +8,53 @@ class Stately::Db::FilterCondition
 
   sig do
     params(
-      item_type: T.nilable(String)
+      item_type: T.nilable(String),
+      cel_expression: T.nilable(Stately::Db::CelExpression)
     ).void
   end
   def initialize(
-    item_type: ""
+    item_type: "",
+    cel_expression: nil
   )
   end
 
-  # item_type is the type of item to filter by.
+  # item_type is the type of item to include in a query response.
   sig { returns(String) }
   def item_type
   end
 
-  # item_type is the type of item to filter by.
+  # item_type is the type of item to include in a query response.
   sig { params(value: String).void }
   def item_type=(value)
   end
 
-  # item_type is the type of item to filter by.
+  # item_type is the type of item to include in a query response.
   sig { void }
   def clear_item_type
+  end
+
+  # cel_expression is a CEL expression to evaluate against a specific item type.
+# If an expression evaluates to true, the item is included in the results.
+# This expression *only* applies to the item type specified in the
+# CelExpression.item_type field, and is not applied to other item types in the query.
+  sig { returns(T.nilable(Stately::Db::CelExpression)) }
+  def cel_expression
+  end
+
+  # cel_expression is a CEL expression to evaluate against a specific item type.
+# If an expression evaluates to true, the item is included in the results.
+# This expression *only* applies to the item type specified in the
+# CelExpression.item_type field, and is not applied to other item types in the query.
+  sig { params(value: T.nilable(Stately::Db::CelExpression)).void }
+  def cel_expression=(value)
+  end
+
+  # cel_expression is a CEL expression to evaluate against a specific item type.
+# If an expression evaluates to true, the item is included in the results.
+# This expression *only* applies to the item type specified in the
+# CelExpression.item_type field, and is not applied to other item types in the query.
+  sig { void }
+  def clear_cel_expression
   end
 
   sig { returns(T.nilable(Symbol)) }
@@ -60,6 +86,103 @@ class Stately::Db::FilterCondition
   end
 
   sig { params(msg: Stately::Db::FilterCondition, kw: T.untyped).returns(String) }
+  def self.encode_json(msg, **kw)
+  end
+
+  sig { returns(::Google::Protobuf::Descriptor) }
+  def self.descriptor
+  end
+end
+
+class Stately::Db::CelExpression
+  include ::Google::Protobuf::MessageExts
+  extend ::Google::Protobuf::MessageExts::ClassMethods
+
+  sig do
+    params(
+      item_type: T.nilable(String),
+      expression: T.nilable(String)
+    ).void
+  end
+  def initialize(
+    item_type: "",
+    expression: ""
+  )
+  end
+
+  # item_type is the itemType to evaluate the expression against.
+  sig { returns(String) }
+  def item_type
+  end
+
+  # item_type is the itemType to evaluate the expression against.
+  sig { params(value: String).void }
+  def item_type=(value)
+  end
+
+  # item_type is the itemType to evaluate the expression against.
+  sig { void }
+  def clear_item_type
+  end
+
+  # expression is the CEL expression to evaluate.
+# If the expression evaluates to true, the item is included in the results,
+# otherwise it is excluded.
+#
+# In the context of the CEL expression, 'this' refers to the item being evaluated.
+# For example, the expression is "this.foo == 'bar'" means that the item
+# must have a property 'foo' with the value 'bar' to be included in the results.
+  sig { returns(String) }
+  def expression
+  end
+
+  # expression is the CEL expression to evaluate.
+# If the expression evaluates to true, the item is included in the results,
+# otherwise it is excluded.
+#
+# In the context of the CEL expression, 'this' refers to the item being evaluated.
+# For example, the expression is "this.foo == 'bar'" means that the item
+# must have a property 'foo' with the value 'bar' to be included in the results.
+  sig { params(value: String).void }
+  def expression=(value)
+  end
+
+  # expression is the CEL expression to evaluate.
+# If the expression evaluates to true, the item is included in the results,
+# otherwise it is excluded.
+#
+# In the context of the CEL expression, 'this' refers to the item being evaluated.
+# For example, the expression is "this.foo == 'bar'" means that the item
+# must have a property 'foo' with the value 'bar' to be included in the results.
+  sig { void }
+  def clear_expression
+  end
+
+  sig { params(field: String).returns(T.untyped) }
+  def [](field)
+  end
+
+  sig { params(field: String, value: T.untyped).void }
+  def []=(field, value)
+  end
+
+  sig { returns(T::Hash[Symbol, T.untyped]) }
+  def to_h
+  end
+
+  sig { params(str: String).returns(Stately::Db::CelExpression) }
+  def self.decode(str)
+  end
+
+  sig { params(msg: Stately::Db::CelExpression).returns(String) }
+  def self.encode(msg)
+  end
+
+  sig { params(str: String, kw: T.untyped).returns(Stately::Db::CelExpression) }
+  def self.decode_json(str, **kw)
+  end
+
+  sig { params(msg: Stately::Db::CelExpression, kw: T.untyped).returns(String) }
   def self.encode_json(msg, **kw)
   end
 

@@ -5,7 +5,7 @@
 require 'google/protobuf'
 
 
-descriptor_data = "\n\x15\x64\x62/list_filters.proto\x12\nstately.db\"9\n\x0f\x46ilterCondition\x12\x1d\n\titem_type\x18\x01 \x01(\tH\x00R\x08itemTypeB\x07\n\x05valueBk\n\x0e\x63om.stately.dbB\x10ListFiltersProtoP\x01\xa2\x02\x03SDX\xaa\x02\nStately.Db\xca\x02\nStately\\Db\xe2\x02\x16Stately\\Db\\GPBMetadata\xea\x02\x0bStately::Dbb\x06proto3"
+descriptor_data = "\n\x15\x64\x62/list_filters.proto\x12\nstately.db\"}\n\x0f\x46ilterCondition\x12\x1d\n\titem_type\x18\x01 \x01(\tH\x00R\x08itemType\x12\x42\n\x0e\x63\x65l_expression\x18\x02 \x01(\x0b\x32\x19.stately.db.CelExpressionH\x00R\rcelExpressionB\x07\n\x05value\"L\n\rCelExpression\x12\x1b\n\titem_type\x18\x01 \x01(\tR\x08itemType\x12\x1e\n\nexpression\x18\x02 \x01(\tR\nexpressionBk\n\x0e\x63om.stately.dbB\x10ListFiltersProtoP\x01\xa2\x02\x03SDX\xaa\x02\nStately.Db\xca\x02\nStately\\Db\xe2\x02\x16Stately\\Db\\GPBMetadata\xea\x02\x0bStately::Dbb\x06proto3"
 
 pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
@@ -13,5 +13,6 @@ pool.add_serialized_file(descriptor_data)
 module Stately
   module Db
     FilterCondition = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.FilterCondition").msgclass
+    CelExpression = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("stately.db.CelExpression").msgclass
   end
 end
