@@ -272,13 +272,14 @@ module StatelyDB
         sort_property: T.untyped,
         sort_direction: T.untyped,
         item_types: T.untyped,
+        cel_filters: T.untyped,
         gt: T.untyped,
         gte: T.untyped,
         lt: T.untyped,
         lte: T.untyped
       ).returns(T.any(T::Array[StatelyDB::Item], StatelyDB::Token))
     end
-    def begin_list(prefix, limit: 100, sort_property: nil, sort_direction: :ascending, item_types: [], gt: nil, gte: nil, lt: nil, lte: nil); end
+    def begin_list(prefix, limit: 100, sort_property: nil, sort_direction: :ascending, item_types: [], cel_filters: [], gt: nil, gte: nil, lt: nil, lte: nil); end
 
     # Continue listing Items from a StatelyDB Store using a token.
     # 
@@ -305,6 +306,8 @@ module StatelyDB
     # 
     # _@param_ `item_types` — the item types to filter by. The returned items will be instances of one of these types.
     # 
+    # _@param_ `cel_filters` — ] An optional list of item_type, cel_expression tuples that represent CEL expressions to filter the results set by. Use the cel_filter helper function to build these expressions. CEL expressions are only evaluated for the item type they are defined for, and do not affect other item types in the result set. This means if an item type has no CEL filter and there are no item_type filters constraints, it will be included in the result set. In the context of a CEL expression, the key-word `this` refers to the item being evaluated, and property properties should be accessed by the names as they appear in schema -- not necessarily as they appear in the generated code for a particular language. For example, if you have a `Movie` item type with the property `rating`, you could write a CEL expression like `this.rating == 'R'` to return only movies that are rated `R`. Find the full CEL language definition here: https://github.com/google/cel-spec/blob/master/doc/langdef.md
+    # 
     # _@param_ `total_segments` — the total number of segments to divide the scan into. Use this when you want to parallelize your operation.
     # 
     # _@param_ `segment_index` — the index of the segment to scan. Use this when you want to parallelize your operation.
@@ -317,12 +320,13 @@ module StatelyDB
     sig do
       params(
         limit: Integer,
-        item_types: T::Array[T.any(T::Class[T.anything], String)],
+        item_types: T::Array[T.any(StatelyDB::Item, String)],
+        cel_filters: T::Array[T.any(T::Array[T.any(T::Class[T.anything], String)], String)],
         total_segments: T.nilable(Integer),
         segment_index: T.nilable(Integer)
       ).returns(T.any(T::Array[StatelyDB::Item], StatelyDB::Token))
     end
-    def begin_scan(limit: 0, item_types: [], total_segments: nil, segment_index: nil); end
+    def begin_scan(limit: 0, item_types: [], cel_filters: [], total_segments: nil, segment_index: nil); end
 
     # continue_scan takes the token from a begin_scan call and returns more results
     # based on the original request parameters and pagination options.
@@ -1020,13 +1024,14 @@ module StatelyDB
           sort_property: T.untyped,
           sort_direction: T.untyped,
           item_types: T.untyped,
+          cel_filters: T.untyped,
           gt: T.untyped,
           gte: T.untyped,
           lt: T.untyped,
           lte: T.untyped
         ).returns([T::Array[StatelyDB::Item], ::Stately::Db::ListToken])
       end
-      def begin_list(prefix, limit: 100, sort_property: nil, sort_direction: :ascending, item_types: [], gt: nil, gte: nil, lt: nil, lte: nil); end
+      def begin_list(prefix, limit: 100, sort_property: nil, sort_direction: :ascending, item_types: [], cel_filters: [], gt: nil, gte: nil, lt: nil, lte: nil); end
 
       # Continue listing Items from a StatelyDB Store using a token.
       # 

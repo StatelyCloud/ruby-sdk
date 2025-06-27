@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "common/build_filters"
+
 module StatelyDB
   module Transaction
     # Transaction coordinates sending requests and waiting for responses. Consumers should not need
@@ -335,8 +337,23 @@ module StatelyDB
       # @param limit [Integer] the maximum number of items to return
       # @param sort_property [String] the property to sort by
       # @param sort_direction [Symbol] the direction to sort by (:ascending or :descending)
-      # @param item_types [Array<Class, String>] the item types to filter by. The returned
+      # @param item_types [Array<StatelyDB::Item, String>] the item types to filter by. The returned
       #   items will be instances of one of these types.
+      # @param cel_filters [Array<Array<Class, String>, String>>] An optional list of
+      #   item_type, cel_expression tuples that represent CEL expressions to filter the
+      #   results set by. Use the cel_filter helper function to build these expressions.
+      #   CEL expressions are only evaluated for the item type they are defined for, and
+      #   do not affect other item types in the result set. This means if an item type has
+      #   no CEL filter and there are no item_type filters constraints, it will be included
+      #   in the result set.
+      #   In the context of a CEL expression, the key-word `this` refers to the item being
+      #   evaluated, and property properties should be accessed by the names as they appear
+      #   in schema -- not necessarily as they appear in the generated code for a particular
+      #   language. For example, if you have a `Movie` item type with the property `rating`,
+      #   you could write a CEL expression like `this.rating == 'R'` to return only movies
+      #   that are rated `R`.
+      #   Find the full CEL language definition here:
+      #   https://github.com/google/cel-spec/blob/master/doc/langdef.md
       # @param gt [StatelyDB::KeyPath | String] filters results to only include items with a key greater than the
       #   specified value based on lexicographic ordering.
       # @param gte [StatelyDB::KeyPath | String] filters results to only include items with a key greater than or equal to the
@@ -358,6 +375,7 @@ module StatelyDB
                      sort_property: nil,
                      sort_direction: :ascending,
                      item_types: [],
+                     cel_filters: [],
                      gt: nil,
                      gte: nil,
                      lt: nil,
@@ -386,11 +404,7 @@ module StatelyDB
             limit:,
             sort_property:,
             sort_direction:,
-            filter_conditions: item_types.map do |item_type|
-              Stately::Db::FilterCondition.new(
-                item_type: item_type.respond_to?(:name) ? item_type.name.split("::").last : item_type
-              )
-            end,
+            filter_conditions: build_filters(item_types: item_types, cel_filters: cel_filters),
             key_conditions: key_conditions
           )
         )
