@@ -28,5 +28,8 @@ Gem::Specification.new do |s|
   s.add_dependency "async", "2.21.1"
   s.add_dependency "async-actor", "0.1.1"
   s.add_dependency "async-http", "0.85.0"
-  s.add_dependency "grpc", "1.64.3"
+  s.add_dependency "grpc", "1.73.0"
+  # include rake because it's required to build grpc native extensions
+  # and some environments may not have it installed causing grpc installation to fail
+  s.add_dependency "rake", "13.3.0"
 end

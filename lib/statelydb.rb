@@ -267,7 +267,7 @@ module StatelyDB
       req = Stately::Db::BeginScanRequest.new(
         store_id: @store_id,
         limit:,
-        filter_condition: build_filters(item_types: item_types, cel_filters: cel_filters),
+        filter_conditions: build_filters(item_types: item_types, cel_filters: cel_filters),
         schema_id: @schema::SCHEMA_ID,
         schema_version_id: @schema::SCHEMA_VERSION_ID
       )

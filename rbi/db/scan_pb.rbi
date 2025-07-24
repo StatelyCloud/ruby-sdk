@@ -9,7 +9,7 @@ class Stately::Db::BeginScanRequest
   sig do
     params(
       store_id: T.nilable(Integer),
-      filter_condition: T.nilable(T::Array[T.nilable(Stately::Db::FilterCondition)]),
+      filter_conditions: T.nilable(T::Array[T.nilable(Stately::Db::FilterCondition)]),
       limit: T.nilable(Integer),
       segmentation_params: T.nilable(Stately::Db::SegmentationParams),
       schema_version_id: T.nilable(Integer),
@@ -18,7 +18,7 @@ class Stately::Db::BeginScanRequest
   end
   def initialize(
     store_id: 0,
-    filter_condition: [],
+    filter_conditions: [],
     limit: 0,
     segmentation_params: nil,
     schema_version_id: 0,
@@ -44,25 +44,25 @@ class Stately::Db::BeginScanRequest
   def clear_store_id
   end
 
-  # filter_condition is a set of conditions to filter the scan result by.
+  # filter_conditions is a set of conditions to filter the scan result by.
 # If no conditions are provided, all items in the store will be returned.
 # Filter conditions are combined with OR.
   sig { returns(T::Array[T.nilable(Stately::Db::FilterCondition)]) }
-  def filter_condition
+  def filter_conditions
   end
 
-  # filter_condition is a set of conditions to filter the scan result by.
+  # filter_conditions is a set of conditions to filter the scan result by.
 # If no conditions are provided, all items in the store will be returned.
 # Filter conditions are combined with OR.
   sig { params(value: ::Google::Protobuf::RepeatedField).void }
-  def filter_condition=(value)
+  def filter_conditions=(value)
   end
 
-  # filter_condition is a set of conditions to filter the scan result by.
+  # filter_conditions is a set of conditions to filter the scan result by.
 # If no conditions are provided, all items in the store will be returned.
 # Filter conditions are combined with OR.
   sig { void }
-  def clear_filter_condition
+  def clear_filter_conditions
   end
 
   # limit is the maximum number of items to return. If this is not specified or
