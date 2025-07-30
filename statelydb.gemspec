@@ -25,11 +25,13 @@ Gem::Specification.new do |s|
   # Gemfile is only for development and test dependencies
   # If you want people who depend on your gem to have the deps installed
   # they have to go here
-  s.add_dependency "async", "2.21.1"
-  s.add_dependency "async-actor", "0.1.1"
-  s.add_dependency "async-http", "0.85.0"
-  s.add_dependency "grpc", "1.73.0"
+  s.add_dependency "async", "~> 2.0"
+  s.add_dependency "async-actor", "~> 0.1"
+  s.add_dependency "async-http", "~> 0.1"
+  s.add_dependency "grpc", "~> 1.0"
   # include rake because it's required to build grpc native extensions
-  # and some environments may not have it installed causing grpc installation to fail
-  s.add_dependency "rake", "13.3.0"
+  # and some environments may not have it installed causing grpc installation to fail.
+  # Lock to 13.x.x as that's what grpc uses:
+  # https://github.com/grpc/grpc/blob/a77f9ec7c0f5175ad87343c35dbb43142f3a690f/grpc.gemspec#L40
+  s.add_dependency "rake", "~> 13.0"
 end

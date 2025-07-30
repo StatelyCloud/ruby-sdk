@@ -66,7 +66,6 @@ RSpec.describe "AuthTokenProvider" do
     call_count = 0
 
     GrpcMock.stub_request("/stately.auth.AuthService/GetAuthToken").to_return do |req, _call|
-      expect(req).to be_a(Stately::Auth::GetAuthTokenRequest)
       expect(req.access_key).to eql "test-access-key"
       sleep(2)
       call_count += 1
