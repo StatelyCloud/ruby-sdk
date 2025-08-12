@@ -25,7 +25,7 @@ module StatelyDB
   class CoreClient
     # Initialize a new StatelyDB CoreClient
     #
-    # @param store_id [Integer] the StatelyDB to use for all operations with this client.
+    # @param store_id [Integer] the StatelyDB store to use for all operations with this client.
     # @param schema [Module] the generated Schema module to use for mapping StatelyDB Items.
     # @param token_provider [StatelyDB::Common::Auth::TokenProvider] the token provider to use for authentication.
     # @param endpoint [String] the endpoint to connect to.

@@ -164,7 +164,7 @@ module StatelyDB
   class CoreClient
     # Initialize a new StatelyDB CoreClient
     # 
-    # _@param_ `store_id` — the StatelyDB to use for all operations with this client.
+    # _@param_ `store_id` — the StatelyDB store to use for all operations with this client.
     # 
     # _@param_ `schema` — the generated Schema module to use for mapping StatelyDB Items.
     # 
